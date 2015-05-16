@@ -1,0 +1,50 @@
+//Test with all functionality features of language
+var a //arithmetic variable (int)
+var #a // boolean variable
+read a // read int
+read #a // read bool
+print + a 1 // print (a + 1)
+print == #a == / a 10 0 //print (#a == (a/10 == 0))
+
+//Loop and condition:
+//while (a < 10) {
+//  if (#a){ print(0);} else {print(1);}
+//  a = a + 1;
+//  print true
+//}
+while < a 10 ;; if #a print 0 print 1 = a + a 1 print true
+
+//Contexts (custom scopes):
+//{ int x; x = 10; print (x); }
+//{ int x; print (x); x = 5; { int b; b = 3 * x; print b; } print (x); }
+@ ;; var x = x 10 print x
+@ ;;;; var x print x = x 5 @ ;; var b = b * 3 x print b print x
+
+//Ternary operator
+var t
+= t ?: #a 2 3 //t = #a ? 2 : 3;
+
+var #b
+//Logical operations
+= #b && || #b ! #a true //#b = (#b || ! #a) && true
+= #b ?: #a false true
+= #b != #a true
+= #b == #a true
+
+//Arithmetic compare operations
+var c
+= #b >= c 0
+= #b <= c 0
+= #b > c 0
+= #b < c 0
+
+//Arithmetic operations
+//c = (t=1)*t + (t=10-2)%7*t/4; print(c)
+= c + * = t 1 t / * % = t - 10 2 7 t 4 print c
+
+//Unary minus
+// c = -c; print(c);
+= c neg c print c
+
+//Int literal
+= c -5
