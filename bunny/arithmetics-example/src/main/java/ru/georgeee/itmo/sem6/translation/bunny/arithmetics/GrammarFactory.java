@@ -1,6 +1,4 @@
-package ru.georgeee.itmo.sem6.translation.bunny.test.arithmetics;
-
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.CanonicalGrammar;
+package ru.georgeee.itmo.sem6.translation.bunny.arithmetics;
 
 public class GrammarFactory {
     private static final String ENCLOSED = "Enclosed";
@@ -16,7 +14,7 @@ public class GrammarFactory {
 //UOp0 -> - | ε
 //UOp1 -> ε
 
-    private static CanonicalGrammar createGrammar(){
-        CanonicalGrammar grammar = new CanonicalGrammar()
-    }
+//    private static Grammar createGrammar(){
+//        Grammar grammar = new Grammar()
+//    }
 }

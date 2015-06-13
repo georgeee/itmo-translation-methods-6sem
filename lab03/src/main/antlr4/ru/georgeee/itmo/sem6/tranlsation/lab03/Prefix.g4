@@ -1,4 +1,3 @@
-// define a grammar called Hello
 grammar Prefix;
 
 @header{
@@ -112,7 +111,8 @@ expr returns [Expr v] :  arithExpr { $v = $arithExpr.v; }
 
 read returns [ReadStmt v] : Read boolId { $v = new ReadStmt($boolId.v); } | Read arithId { $v = new ReadStmt($arithId.v); };
 print returns [PrintStmt v] : Print (arithExpr {$v = new PrintStmt($arithExpr.v); } | boolExpr {$v = new PrintStmt($boolExpr.v); });
-cond returns [ConditionStmt v] : If boolExpr a = stmt b = stmt { $v = new ConditionStmt($boolExpr.v, $a.v, $b.v); };
+condIf returns [ConditionStmt v] : If boolExpr a = stmt { $v = new ConditionStmt($boolExpr.v, $a.v, null); };
+condIfElse returns [ConditionStmt v] : IfElse boolExpr a = stmt b = stmt { $v = new ConditionStmt($boolExpr.v, $a.v, $b.v); };
 var returns [VarStmt v] : Var (boolId { $v = new VarStmt($boolId.v); } | arithId { $v = new VarStmt($arithId.v); });
 loop returns [LoopStmt v] : Loop boolExpr stmt { $v = new LoopStmt($boolExpr.v, $stmt.v); };
 compound returns [CompoundStmt v] : Semicolon a = stmt b = stmt
@@ -133,7 +133,8 @@ stmt returns [Stmt v] :   loop { $v = $loop.v; }
        | assignBoolExpr { $v = new ExprStmt($assignBoolExpr.v); }
        | read { $v = $read.v; }
        | print { $v = $print.v; }
-       | cond { $v = $cond.v; }
+       | condIf { $v = $condIf.v; }
+       | condIfElse { $v = $condIfElse.v; }
        | var { $v = $var.v; }
        | compound { $v = $compound.v; }
        | context { $v = $context.v; };
@@ -151,6 +152,7 @@ Comment : ( '--' | '//' ) ~( '\r' | '\n')* -> skip;
 Print : 'print';
 Read : 'read';
 If : 'if';
+IfElse : 'ifelse';
 Loop : 'while';
 Var : 'var';
 Bool: 'true' | 'false';

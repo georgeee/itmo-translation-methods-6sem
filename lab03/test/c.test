@@ -12,7 +12,7 @@ print == #a == / a 10 0 //print (#a == (a/10 == 0))
 //  a = a + 1;
 //  print true
 //}
-while < a 10 ;; if #a print 0 print 1 = a + a 1 print true
+while < a 10 ;; ifelse #a print 0 print 1 = a + a 1 print true
 
 //Contexts (custom scopes):
 //{ int x; x = 10; print (x); }
@@ -48,3 +48,5 @@ var c
 
 //Int literal
 = c -5
+
+if > c 0 print 9

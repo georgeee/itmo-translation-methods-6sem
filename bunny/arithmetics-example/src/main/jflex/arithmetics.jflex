@@ -9,13 +9,12 @@
 //UOp1 -> ε
 /* JFlex example: partial Java language lexer specification */
 
-package ru.georgeee.itmo.sem6.translation.bunny.test.arithmetics;
-    /**
-     * This class is a simple example lexer.
-     */
+package ru.georgeee.itmo.sem6.translation.bunny.arithmetics;
+import ru.georgeee.itmo.sem6.translation.bunny.*;
 %%
 
 %class ALexer
+%implements TokenReader<ASym>
 %unicode
 %line
 %column
@@ -27,10 +26,10 @@ package ru.georgeee.itmo.sem6.translation.bunny.test.arithmetics;
   private ASymbol symbol(ASym type, Object value) {return new ASymbol(type, yyline, yycolumn, value);}
 %}
 
-%function next_token
+%function nextToken
 %type ASymbol
 %eofval{
-  return symbol(ASym.EOF);
+  /*return symbol(ASym.EOF);*/
 %eofval}
 %eofclose
 

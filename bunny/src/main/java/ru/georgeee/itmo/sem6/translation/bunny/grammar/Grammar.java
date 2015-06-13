@@ -1,19 +1,14 @@
 package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.*;
 
-public class CanonicalGrammar {
-    @Getter
-    private final Nonterminal start;
-    private final Map<String, Nonterminal> nonterminals;
-
-    public CanonicalGrammar(Nonterminal start) {
-        this.start = start;
-        nonterminals = new HashMap<>();
-        nonterminals.put(start.getId(), start);
-    }
+public class Grammar {
+    @Getter @Setter
+    private String start;
+    private final Map<String, Nonterminal> nonterminals = new HashMap<>();
 
     public void addRule(String nonterminalId, List<Node> production) {
         getOrCreate(nonterminalId).addRule(production);

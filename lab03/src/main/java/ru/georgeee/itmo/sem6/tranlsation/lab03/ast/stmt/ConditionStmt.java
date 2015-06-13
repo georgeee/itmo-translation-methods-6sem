@@ -26,6 +26,9 @@ public class ConditionStmt implements Stmt {
     public Map<String, Var> validate(Map<String, Var> ctx) throws ValidationException {
         Util.validate(ctx, condition);
         ctx = trueStmt.validate(ctx);
-        return falseStmt.validate(ctx);
+        if(falseStmt != null){
+            ctx = falseStmt.validate(ctx);
+        }
+        return ctx;
     }
 }

@@ -1,4 +1,7 @@
-package ru.georgeee.itmo.sem6.translation.bunny.test.arithmetics;
+package ru.georgeee.itmo.sem6.translation.bunny.arithmetics;
+
+import ru.georgeee.itmo.sem6.translation.bunny.Token;
+import ru.georgeee.itmo.sem6.translation.bunny.TokenReader;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,13 +11,13 @@ import java.io.InputStream;
 public class Main {
     public static void main(String[] args) throws IOException {
         InputStream is = getInputStream(args);
-        ALexer lexer = new ALexer(is);
-        ASymbol symbol = null;
+        TokenReader<ASym> lexer = new ALexer(is);
+        Token<ASym> symbol = null;
         do {
             if (symbol != null) {
                 System.out.println(symbol);
             }
-            symbol = lexer.next_token();
+            symbol = lexer.nextToken();
         } while (!(symbol == null || symbol.getType() == ASym.EOF));
     }
 

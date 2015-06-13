@@ -216,10 +216,12 @@ public class JavaGenerator implements Generator {
         incInd();
         generateStmt(stmt.getTrueStmt());
         decInd();
-        appendIndNL("} else {");
-        incInd();
-        generateStmt(stmt.getFalseStmt());
-        decInd();
+        if(stmt.getFalseStmt() != null) {
+            appendIndNL("} else {");
+            incInd();
+            generateStmt(stmt.getFalseStmt());
+            decInd();
+        }
         appendIndNL("}");
     }
 

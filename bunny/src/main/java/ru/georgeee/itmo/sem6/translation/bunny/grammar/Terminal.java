@@ -1,4 +1,12 @@
 package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 
-public interface Terminal extends Node{
+import lombok.Getter;
+
+public class Terminal implements Node{
+    @Getter
+    private final String id;
+
+    public Terminal(String id) {
+        this.id = id;
+    }
 }
