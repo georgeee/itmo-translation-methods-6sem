@@ -13,15 +13,25 @@ public class Nonterminal implements Node{
     @Getter
     private final String id;
     @Getter
-    private final List<List<Node>> rules;
+    private final List<Production> productions;
+    @Getter
+    private List<Attr> attributes;
 
     public Nonterminal(String id) {
         this.id = id;
-        this.rules = new ArrayList<>();
+        this.productions = new ArrayList<>();
     }
 
-    public boolean addRule(List<Node> nodes) {
-        return rules.add(nodes);
+    public boolean addProduction(List<Production.Member> members, String codeBlock) {
+        return productions.add(new Production(this, members, codeBlock));
+    }
+
+    public void setAttributes(List<Attr> attributes) {
+        if(this.attributes == null) {
+            this.attributes = attributes;
+        }else {
+            throw new IllegalStateException("Attributes already set for nonterminal");
+        }
     }
 
     @Override
@@ -43,5 +53,14 @@ public class Nonterminal implements Node{
         int result = super.hashCode();
         result = 31 * result + id.hashCode();
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Nonterminal{" +
+                "id='" + id + '\'' +
+                ", productions=" + productions +
+                ", attributes=" + attributes +
+                '}';
     }
 }

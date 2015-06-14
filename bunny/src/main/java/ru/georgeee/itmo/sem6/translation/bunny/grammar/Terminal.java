@@ -9,4 +9,11 @@ public class Terminal implements Node{
     public Terminal(String id) {
         this.id = id;
     }
+
+    @Override
+    public String toString() {
+        return "Terminal{" +
+                "id='" + id + '\'' +
+                '}';
+    }
 }
