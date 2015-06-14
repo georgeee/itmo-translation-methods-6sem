@@ -3,12 +3,15 @@ package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class Grammar {
     private final Map<String, Nonterminal> nonterminals = new HashMap<>();
-    @Getter @Setter
-    private String start;
+    @Getter
+    private Nonterminal start;
     @Getter @Setter
     private String packageName;
     @Getter @Setter
@@ -16,8 +19,12 @@ public class Grammar {
     @Getter @Setter
     private String headerCodeBlock;
 
-    public void addHeaderCodeBlock(String block){
+    public void addHeaderCodeBlock(String block) {
         headerCodeBlock = headerCodeBlock == null ? block : headerCodeBlock + block;
+    }
+
+    public void setStart(String start) {
+        this.start = getOrCreate(start);
     }
 
     public Nonterminal getOrCreate(String nonterminalId) {

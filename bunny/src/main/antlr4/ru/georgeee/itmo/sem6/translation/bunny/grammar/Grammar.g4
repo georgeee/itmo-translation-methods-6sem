@@ -9,6 +9,7 @@ import java.util.Collections;
 
 grammarDef returns [Grammar v] : g=grammarDef p=packageDef { $v = $g.v; $g.v.setPackageName($p.v); }
                                | g=grammarDef c=classDef { $v = $g.v; $g.v.setClassName($c.v); }
+                               | g=grammarDef s=startDef { $v = $g.v; $g.v.setStart($s.v); }
                                | g=grammarDef h=headerDef { $v = $g.v; $g.v.addHeaderCodeBlock($h.v); }
                                | g=grammarDef r=ruleDef { $v = $g.v; addRule($g.v, $r.v); }
                                | {$v = new Grammar();} ;
@@ -17,6 +18,7 @@ dotSeparatedId returns [String v]: id=Id {$v = $id.text;} | id=DotSeparatedId {$
 
 packageDef returns [String v] : Package id=dotSeparatedId { $v = $id.v; };
 classDef returns [String v]: Class id=Id { $v = $id.text; };
+startDef returns [String v]: Start id=Id { $v = $id.text; };
 headerDef returns [String v]: Header c=CodeBlock { $v = $c.text; };
 ruleDef returns [PreRule v]: id=Id al=attrList Impl ps=productions Semicolon { $v = new PreRule($id.text, $al.v, $ps.v); };
 productions returns [List<PreProduction> v]: p=production { $v = new ArrayList<>(); $v.add($p.v); }
@@ -50,6 +52,7 @@ WS  : [ \t\r\n]+ -> skip ;
 Package: '%package';
 Class: '%class';
 Header: '%header';
+Start: '%start';
 
 fragment IdF : [_A-Za-z][_A-Za-z0-9]*;
 TerminalId: '@' IdF {setText(getText().substring(1));};

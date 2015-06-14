@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.*;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.GrammarLexer;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.GrammarParser;
+import ru.georgeee.itmo.sem6.translation.bunny.processing.Processor;
 
 import java.io.IOException;
 
@@ -30,7 +31,9 @@ public class Main {
 
     public void run(GrammarParser parser) throws IOException {
         Grammar grammar = parser.grammarDef().v;
-        System.out.println(grammar);
+        Processor processor = new Processor(grammar);
+        processor.computeItemSets();
+        processor.printItemSets(System.out);
     }
 
     private CharStream getInputStream() throws IOException {

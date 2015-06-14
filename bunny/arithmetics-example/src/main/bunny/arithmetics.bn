@@ -1,4 +1,5 @@
 %class AParser
+%start Expr
 %package ru.georgeee.itmo.sem6.translation.bunny.arithmetics
 %header %{
 import ru.georgeee.itmo.sem6.translation.bunny.arithmetics.expr.*;
