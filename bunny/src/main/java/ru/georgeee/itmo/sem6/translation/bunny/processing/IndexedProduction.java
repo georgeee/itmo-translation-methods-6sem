@@ -3,7 +3,7 @@ package ru.georgeee.itmo.sem6.translation.bunny.processing;
 import lombok.Getter;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
 
-public class IndexedProduction {
+class IndexedProduction {
     @Getter
     private final Production production;
     @Getter

@@ -12,7 +12,7 @@ import java.util.*;
 public class Processor {
     private static final Logger log = LoggerFactory.getLogger(Processor.class);
     private final List<ItemSet> itemSets = new ArrayList<>();
-    private final Set<IndexedProduction> allItems = new HashSet<>();
+    private final Map<IndexedProduction, ItemSet> allItems = new HashMap<>();
 
     private final Grammar grammar;
 
@@ -44,13 +44,14 @@ public class Processor {
 
     private boolean needNewItemSet(List<IndexedProduction> productions) {
         //if item set is present, then
-        return allItems.contains(productions.get(0).next());
+        return allItems.containsKey(productions.get(0).next());
     }
 
     private void addItemSet(ItemSet itemSet) {
         for (IndexedProduction iP : itemSet) {
-            if (!allItems.add(iP)) {
-                log.warn("Duplicate production: {}", iP);
+            ItemSet prev = allItems.put(iP, itemSet);
+            if (prev != null) {
+                log.warn("Duplicate production {}: replaced item set #{} with #{}", iP, prev, itemSet);
             }
         }
         itemSets.add(itemSet);

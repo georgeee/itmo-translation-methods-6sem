@@ -3,7 +3,7 @@ grammar Grammar;
 @header{
 import static ru.georgeee.itmo.sem6.translation.bunny.parser.ParserHelper.*;
 import org.apache.commons.lang3.tuple.*;
-import ru.georgeee.itmo.sem6.translation.bunny.parser.*;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
 import java.util.Collections;
 }
 

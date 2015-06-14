@@ -9,7 +9,7 @@ import ru.georgeee.itmo.sem6.translation.bunny.utils.Utils;
 import java.io.IOException;
 import java.util.*;
 
-public class ItemSet implements Iterable<IndexedProduction> {
+class ItemSet implements Iterable<IndexedProduction> {
     @Getter
     private final int id;
     private final List<IndexedProduction> items = new ArrayList<>();
@@ -59,9 +59,6 @@ public class ItemSet implements Iterable<IndexedProduction> {
         used.add(start);
         itemSet.completeToClosure(used);
         return itemSet;
-    }
-
-    private void addAll(Iterable<Production> productions, boolean synthetic) {
     }
 
     public void completeToClosure(Set<Nonterminal> used) {

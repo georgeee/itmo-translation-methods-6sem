@@ -2,8 +2,8 @@ package ru.georgeee.itmo.sem6.translation.bunny;
 
 import org.antlr.v4.runtime.*;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.GrammarLexer;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.GrammarParser;
+import ru.georgeee.itmo.sem6.translation.bunny.parser.GrammarLexer;
+import ru.georgeee.itmo.sem6.translation.bunny.parser.GrammarParser;
 import ru.georgeee.itmo.sem6.translation.bunny.processing.Processor;
 
 import java.io.IOException;
