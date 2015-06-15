@@ -4,7 +4,7 @@ import lombok.Getter;
 
 import java.util.List;
 
-public class PreProduction {
+class PreProduction {
     @Getter
     private final List<Member> children;
     @Getter

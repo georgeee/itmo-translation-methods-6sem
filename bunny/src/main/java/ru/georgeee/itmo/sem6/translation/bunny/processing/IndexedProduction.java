@@ -1,6 +1,7 @@
 package ru.georgeee.itmo.sem6.translation.bunny.processing;
 
 import lombok.Getter;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
 
 class IndexedProduction {
@@ -15,6 +16,10 @@ class IndexedProduction {
         }
         this.production = production;
         this.index = index;
+    }
+
+    public Node nextNode(){
+        return production.get(index).getNode();
     }
 
     @Override
@@ -42,6 +47,10 @@ class IndexedProduction {
         int result = production.hashCode();
         result = 31 * result + index;
         return result;
+    }
+
+    public boolean hasNext(){
+        return index < production.size();
     }
 
     public IndexedProduction next() {

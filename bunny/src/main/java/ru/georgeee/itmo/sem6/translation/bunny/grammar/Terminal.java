@@ -3,35 +3,32 @@ package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 import lombok.Getter;
 
 public class Terminal implements Node{
-    private static final int CLASS_HASH_CODE_SALT = Terminal.class.hashCode();
     @Getter
     private final String id;
+    @Getter
+    private final int nodeId;
+    @Getter
+    private final int termId;
 
-    public Terminal(String id) {
+    public Terminal(String id, int nodeId, int termId) {
         this.id = id;
+        this.nodeId = nodeId;
+        this.termId = termId;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Terminal terminal = (Terminal) o;
-
-        if (!id.equals(terminal.id)) return false;
-
-        return true;
+        //Invariant
+        return this == o;
     }
 
     @Override
     public int hashCode() {
-        return 31 * id.hashCode() + CLASS_HASH_CODE_SALT;
+        return super.hashCode();
     }
 
     @Override
     public String toString() {
-        return "Terminal{" +
-                "id='" + id + '\'' +
-                '}';
+        return "@" + id;
     }
 }

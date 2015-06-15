@@ -32,8 +32,10 @@ public class Main {
     public void run(GrammarParser parser) throws IOException {
         Grammar grammar = parser.grammarDef().v;
         Processor processor = new Processor(grammar);
-        processor.computeItemSets();
+        processor.compute();
         processor.printItemSets(System.out);
+        System.out.append("=============== Extended grammar ================\n");
+        processor.printExtendedGrammar(System.out);
     }
 
     private CharStream getInputStream() throws IOException {

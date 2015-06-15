@@ -5,15 +5,18 @@ import lombok.Getter;
 import java.util.Iterator;
 import java.util.List;
 
-public class Production {
+public class Production implements Iterable<Production.Member>{
     @Getter
     private final Nonterminal parent;
+    @Getter
+    private final int id;
     private final List<Member> nodes;
     @Getter
     private final String codeBlock;
 
-    Production(Nonterminal parent, List<Member> nodes, String codeBlock) {
+    Production(Nonterminal parent, int id, List<Member> nodes, String codeBlock) {
         this.parent = parent;
+        this.id = id;
         this.nodes = nodes;
         this.codeBlock = codeBlock;
     }
@@ -26,6 +29,7 @@ public class Production {
         return nodes.isEmpty();
     }
 
+    @Override
     public Iterator<Member> iterator() {
         return nodes.iterator();
     }
@@ -49,17 +53,14 @@ public class Production {
 
         Production that = (Production) o;
 
-        if (!nodes.equals(that.nodes)) return false;
-        if (!parent.equals(that.parent)) return false;
+        if (id != that.id) return false;
 
-        return true;
+        return this == o;
     }
 
     @Override
     public int hashCode() {
-        int result = parent.hashCode();
-        result = 31 * result + nodes.hashCode();
-        return result;
+        return id;
     }
 
     public static class Member {

@@ -5,7 +5,7 @@ import ru.georgeee.itmo.sem6.translation.bunny.grammar.Attr;
 
 import java.util.List;
 
-public class PreRule {
+class PreRule {
     @Getter
     private final String nonterminalId;
     @Getter

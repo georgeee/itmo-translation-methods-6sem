@@ -5,10 +5,10 @@ import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ParserHelper {
+class ParserHelper {
     public static void addRule(Grammar grammar, PreRule preRule) {
         String nonterminalId = preRule.getNonterminalId();
-        Nonterminal nonterminal = grammar.getOrCreate(nonterminalId);
+        Nonterminal nonterminal = grammar.getOrCreateNonterminal(nonterminalId);
         nonterminal.setAttributes(preRule.getAttributes());
         for (PreProduction preProduction : preRule.getProductions()) {
             addProduction(nonterminal, grammar, preProduction);
@@ -20,9 +20,9 @@ public class ParserHelper {
         for (PreProduction.Member preMember : preProduction.getChildren()) {
             Node node;
             if (preMember.isTerminal()) {
-                node = new Terminal(preMember.getId());
+                node = grammar.getOrCreateTerminal(preMember.getId());
             } else {
-                node = grammar.getOrCreate(preMember.getId());
+                node = grammar.getOrCreateNonterminal(preMember.getId());
             }
             members.add(new Production.Member(node, preMember.getAlias()));
         }

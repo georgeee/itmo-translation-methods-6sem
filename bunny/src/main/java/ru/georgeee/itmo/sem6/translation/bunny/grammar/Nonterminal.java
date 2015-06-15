@@ -9,18 +9,24 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Nonterminal implements Node, Iterable<Production> {
-    private static final int CLASS_HASH_CODE_SALT = Nonterminal.class.hashCode();
     private static final Logger log = LoggerFactory.getLogger(Nonterminal.class);
 
+    private final Grammar grammar;
     @Getter
     private final String id;
     @Getter
+    private final int nodeId;
+    @Getter
+    private final int nonterminalId;
     private final List<Production> productions;
     @Getter
     private List<Attr> attributes;
 
-    public Nonterminal(String id) {
+    Nonterminal(Grammar grammar, String id, int nodeId, int nonterminalId) {
+        this.grammar = grammar;
         this.id = id;
+        this.nodeId = nodeId;
+        this.nonterminalId = nonterminalId;
         this.productions = new ArrayList<>();
     }
 
@@ -29,8 +35,16 @@ public class Nonterminal implements Node, Iterable<Production> {
         return productions.iterator();
     }
 
-    public boolean addProduction(List<Production.Member> members, String codeBlock) {
-        return productions.add(new Production(this, members, codeBlock));
+    public int size() {
+        return productions.size();
+    }
+
+    public boolean isEmpty() {
+        return productions.isEmpty();
+    }
+
+    public void addProduction(List<Production.Member> members, String codeBlock) {
+        productions.add(grammar.createProduction(this, members, codeBlock));
     }
 
     public void setAttributes(List<Attr> attributes) {
@@ -49,7 +63,7 @@ public class Nonterminal implements Node, Iterable<Production> {
 
     @Override
     public int hashCode() {
-        return 31 * id.hashCode() + CLASS_HASH_CODE_SALT;
+        return super.hashCode();
     }
 
     @Override
