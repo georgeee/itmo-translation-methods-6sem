@@ -2,39 +2,43 @@ package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 
 import lombok.Getter;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public class Production implements Iterable<Production.Member>{
+public class Production implements IProduction<AliasedNode> {
     @Getter
     private final Nonterminal parent;
     @Getter
     private final int id;
-    private final List<Member> nodes;
+    private final List<AliasedNode> nodes;
     @Getter
     private final String codeBlock;
 
-    Production(Nonterminal parent, int id, List<Member> nodes, String codeBlock) {
+    Production(Nonterminal parent, int id, List<AliasedNode> nodes, String codeBlock) {
         this.parent = parent;
         this.id = id;
         this.nodes = nodes;
         this.codeBlock = codeBlock;
     }
 
+    @Override
     public int size() {
         return nodes.size();
     }
 
+    @Override
     public boolean isEmpty() {
         return nodes.isEmpty();
     }
 
     @Override
-    public Iterator<Member> iterator() {
+    public Iterator<AliasedNode> iterator() {
         return nodes.iterator();
     }
 
-    public Member get(int index) {
+    @Override
+    public AliasedNode get(int index) {
         return nodes.get(index);
     }
 
@@ -44,6 +48,14 @@ public class Production implements Iterable<Production.Member>{
                 "parent=" + parent.getId() +
                 ", nodes=" + nodes +
                 '}';
+    }
+
+    public void print(Appendable out) throws IOException {
+        out.append(parent.toString()).append(" -> ");
+        for (Node node : nodes) {
+            out.append(node.toString()).append(' ');
+        }
+        out.append('\n');
     }
 
     @Override
@@ -63,37 +75,4 @@ public class Production implements Iterable<Production.Member>{
         return id;
     }
 
-    public static class Member {
-        @Getter
-        private final Node node;
-        @Getter
-        private final String alias;
-
-        @Override
-        public String toString() {
-            return alias + ':' + node.getId();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Member member = (Member) o;
-
-            if (!node.equals(member.node)) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return node.hashCode();
-        }
-
-        public Member(Node node, String alias) {
-            this.node = node;
-            this.alias = alias;
-        }
-    }
 }

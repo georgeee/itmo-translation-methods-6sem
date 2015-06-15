@@ -2,7 +2,9 @@ package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 
 import lombok.Getter;
 import lombok.Setter;
+import ru.georgeee.itmo.sem6.translation.bunny.processing.SetsComputer;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -21,7 +23,8 @@ public class Grammar implements Iterable<Production> {
     @Getter
     @Setter
     private String headerCodeBlock;
-    private int nodeId;
+    @Getter
+    private final List<Node> nodes = new ArrayList<>();
 
     public void addHeaderCodeBlock(String block) {
         headerCodeBlock = headerCodeBlock == null ? block : headerCodeBlock + block;
@@ -43,7 +46,8 @@ public class Grammar implements Iterable<Production> {
     private <N extends Node> N getOrCreateNode(String id, Map<String, N> map, BiFunction<Integer, Integer, N> factory) {
         N node;
         if (!map.containsKey(id)) {
-            map.put(id, node = factory.apply(nodeId++, map.size()));
+            nodes.add(node = factory.apply(nodes.size(), map.size()));
+            map.put(id, node);
         } else {
             node = map.get(id);
         }
@@ -56,6 +60,10 @@ public class Grammar implements Iterable<Production> {
 
     public int size() {
         return productions.size();
+    }
+
+    public SetsComputer createSetsComputer() {
+        return new SetsComputer(productions, nodes, start);
     }
 
     @Override
@@ -72,7 +80,7 @@ public class Grammar implements Iterable<Production> {
     }
 
     public int getNodeCount() {
-        return nodeId;
+        return nodes.size();
     }
 
     @Override
@@ -86,9 +94,19 @@ public class Grammar implements Iterable<Production> {
                 '}';
     }
 
-    Production createProduction(Nonterminal nonterminal, List<Production.Member> members, String codeBlock) {
-        Production production = new Production(nonterminal, productions.size(), members, codeBlock);
+    Production createProduction(Nonterminal nonterminal, List<AliasedNode> aliasedNodes, String codeBlock) {
+        Production production = new Production(nonterminal, productions.size(), aliasedNodes, codeBlock);
         productions.add(production);
+        if (start == null) {
+            start = nonterminal;
+        }
         return production;
+    }
+
+    public void print(Appendable out) throws IOException {
+        out.append("start: ").append(start.toString()).append('\n');
+        for (Production production : this) {
+            production.print(out);
+        }
     }
 }

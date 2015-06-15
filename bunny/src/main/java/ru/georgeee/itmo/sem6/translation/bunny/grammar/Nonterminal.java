@@ -43,8 +43,8 @@ public class Nonterminal implements Node, Iterable<Production> {
         return productions.isEmpty();
     }
 
-    public void addProduction(List<Production.Member> members, String codeBlock) {
-        productions.add(grammar.createProduction(this, members, codeBlock));
+    public void addProduction(List<AliasedNode> aliasedNodes, String codeBlock) {
+        productions.add(grammar.createProduction(this, aliasedNodes, codeBlock));
     }
 
     public void setAttributes(List<Attr> attributes) {
@@ -69,5 +69,20 @@ public class Nonterminal implements Node, Iterable<Production> {
     @Override
     public String toString() {
         return '$' + getId();
+    }
+
+    @Override
+    public boolean isTerminal() {
+        return false;
+    }
+
+    @Override
+    public boolean isNonterminal() {
+        return true;
+    }
+
+    @Override
+    public Node unwrap() {
+        return this;
     }
 }

@@ -19,7 +19,7 @@ class IndexedProduction {
     }
 
     public Node nextNode(){
-        return production.get(index).getNode();
+        return production.get(index).unwrap();
     }
 
     @Override

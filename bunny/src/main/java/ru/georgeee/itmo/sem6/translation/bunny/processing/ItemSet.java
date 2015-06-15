@@ -41,7 +41,7 @@ class ItemSet implements Iterable<IndexedProduction> {
     public void add(IndexedProduction iP, boolean synthetic) {
         int pos = iP.getIndex();
         if (iP.hasNext()) {
-            Node node = iP.getProduction().get(pos).getNode();
+            Node node = iP.getProduction().get(pos).unwrap();
             Utils.addToMap(goMap, node, iP);
         }
         if (!synthetic) {
@@ -66,7 +66,7 @@ class ItemSet implements Iterable<IndexedProduction> {
             IndexedProduction iP = queue.remove();
             Production production = iP.getProduction();
             if (iP.hasNext()) {
-                Node first = production.get(iP.getIndex()).getNode();
+                Node first = production.get(iP.getIndex()).unwrap();
                 if (first instanceof Nonterminal) {
                     if (!used.contains(first)) {
                         used.add((Nonterminal) first);
@@ -100,7 +100,7 @@ class ItemSet implements Iterable<IndexedProduction> {
                 if (i == iP.getIndex()) {
                     out.append("• ");
                 }
-                out.append(iP.getProduction().get(i).getNode().getId()).append(' ');
+                out.append(iP.getProduction().get(i).getId()).append(' ');
             }
             if (iP.getIndex() == iP.getProduction().size()) {
                 out.append("• ");

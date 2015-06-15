@@ -55,16 +55,15 @@ Header: '%header';
 Start: '%start';
 
 fragment IdF : [_A-Za-z][_A-Za-z0-9]*;
-TerminalId: '@' IdF {setText(getText().substring(1));};
+TerminalId: '@' [_A-Za-z0-9]* {setText(getText().substring(1));};
 DotSeparatedId: (Id ('.' IdF)+ );
 Id : IdF;
 Colon: ':';
-At: '@';
 Semicolon: ';';
 OSqBracket: '[';
 CSqBracket : ']';
 LAngle: '<';
 RAngle: '>';
 Comma: ',';
-Impl: '->';
+Impl: '->' | '→';
 Or: '|';

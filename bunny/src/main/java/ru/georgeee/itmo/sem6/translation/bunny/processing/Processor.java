@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Nonterminal;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
 
 import java.io.IOException;
 import java.util.*;
@@ -19,6 +18,7 @@ public class Processor {
     private ItemSet[][] transitionTable;
 
     private final Grammar grammar;
+    private SetsComputer setsComputer;
 
     public Processor(Grammar grammar) {
         this.grammar = grammar;
@@ -29,7 +29,8 @@ public class Processor {
         computeItemSets();
         computeTransitionTable();
         computeExtendedGrammar();
-        extendedGrammar.computeSets();
+        setsComputer = extendedGrammar.createSetsComputer();
+        setsComputer.compute();
     }
 
     private ItemSet createItemSet() {
@@ -89,8 +90,7 @@ public class Processor {
     private ExtendedProduction createExtendedProduction(ItemSet from, ItemSet to, IndexedProduction production) {
         List<ExtendedNode> nodes = new ArrayList<>();
         ItemSet currentFrom = from;
-        for (Production.Member member : production.getProduction()) {
-            Node node = member.getNode();
+        for (Node node : production.getProduction()) {
             ItemSet currentTo = transitionTable[currentFrom.getId()][node.getNodeId()];
             ExtendedNode extNode = extendedGrammar.createNode(currentFrom, currentTo, node);
             nodes.add(extNode);
@@ -132,7 +132,7 @@ public class Processor {
             production.print(out);
         }
         out.append("-------- Sets --------");
-        extendedGrammar.printSets(out);
+        setsComputer.print(out);
     }
 
 

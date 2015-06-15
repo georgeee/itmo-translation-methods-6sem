@@ -31,4 +31,19 @@ public class Terminal implements Node{
     public String toString() {
         return "@" + id;
     }
+
+    @Override
+    public boolean isTerminal() {
+        return true;
+    }
+
+    @Override
+    public boolean isNonterminal() {
+        return false;
+    }
+
+    @Override
+    public Node unwrap() {
+        return this;
+    }
 }

@@ -16,7 +16,7 @@ class ParserHelper {
     }
 
     private static void addProduction(Nonterminal nonterminal, Grammar grammar, PreProduction preProduction) {
-        List<Production.Member> members = new ArrayList<>();
+        List<AliasedNode> aliasedNodes = new ArrayList<>();
         for (PreProduction.Member preMember : preProduction.getChildren()) {
             Node node;
             if (preMember.isTerminal()) {
@@ -24,9 +24,9 @@ class ParserHelper {
             } else {
                 node = grammar.getOrCreateNonterminal(preMember.getId());
             }
-            members.add(new Production.Member(node, preMember.getAlias()));
+            aliasedNodes.add(new AliasedNode(node, preMember.getAlias()));
         }
-        nonterminal.addProduction(members, preProduction.getCodeBlock());
+        nonterminal.addProduction(aliasedNodes, preProduction.getCodeBlock());
     }
 
 }

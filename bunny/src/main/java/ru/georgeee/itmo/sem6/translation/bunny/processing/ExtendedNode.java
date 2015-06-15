@@ -3,20 +3,17 @@ package ru.georgeee.itmo.sem6.translation.bunny.processing;
 import lombok.Getter;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
 
-import java.io.IOException;
-
-class ExtendedNode {
+class ExtendedNode implements Node {
     @Getter
-    private final int id;
+    private final int nodeId;
     @Getter
     private final ItemSet from;
     @Getter
     private final ItemSet to;
-    @Getter
     private final Node node;
 
-    ExtendedNode(int id, ItemSet from, ItemSet to, Node node) {
-        this.id = id;
+    ExtendedNode(int nodeId, ItemSet from, ItemSet to, Node node) {
+        this.nodeId = nodeId;
         this.from = from;
         this.to = to;
         this.node = node;
@@ -32,10 +29,30 @@ class ExtendedNode {
         return this == obj;
     }
 
-    public void print(Appendable out) throws IOException {
-        out.append('<').append(String.valueOf(from.getId()))
-                .append(", ").append(node.toString())
-                .append(", ").append(to == null ? null : String.valueOf(to.getId()))
-                .append(String.valueOf('>'));
+    public String toString() {
+        return "<" + from.getId()
+                + ", " + node.toString()
+                + ", " + (to == null ? null : to.getId())
+                + '>';
+    }
+
+    @Override
+    public String getId() {
+        return node.getId();
+    }
+
+    @Override
+    public boolean isTerminal() {
+        return node.isTerminal();
+    }
+
+    @Override
+    public boolean isNonterminal() {
+        return node.isNonterminal();
+    }
+
+    @Override
+    public Node unwrap() {
+        return node.unwrap();
     }
 }

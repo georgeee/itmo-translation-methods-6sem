@@ -1,13 +1,14 @@
 package ru.georgeee.itmo.sem6.translation.bunny.processing;
 
 import lombok.Getter;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.IProduction;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-class ExtendedProduction implements Iterable<ExtendedNode>{
+class ExtendedProduction implements IProduction<ExtendedNode> {
     @Getter
     private final ExtendedNode parent;
     @Getter
@@ -20,14 +21,17 @@ class ExtendedProduction implements Iterable<ExtendedNode>{
         this.nodes = nodes;
     }
 
+    @Override
     public int size() {
         return nodes.size();
     }
 
+    @Override
     public ExtendedNode get(int index) {
         return nodes.get(index);
     }
 
+    @Override
     public boolean isEmpty() {
         return nodes.isEmpty();
     }
@@ -38,11 +42,9 @@ class ExtendedProduction implements Iterable<ExtendedNode>{
     }
 
     public void print(Appendable out) throws IOException {
-        parent.print(out);
-        out.append(" -> ");
-        for(ExtendedNode node : nodes){
-            node.print(out);
-            out.append(' ');
+        out.append(parent.toString()).append(" -> ");
+        for (ExtendedNode node : nodes) {
+            out.append(node.toString()).append(' ');
         }
         out.append('\n');
     }
