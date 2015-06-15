@@ -68,10 +68,6 @@ public class Nonterminal implements Node, Iterable<Production> {
 
     @Override
     public String toString() {
-        return "Nonterminal{" +
-                "id='" + id + '\'' +
-                ", productions=" + productions +
-                ", attributes=" + attributes +
-                '}';
+        return '$' + getId();
     }
 }

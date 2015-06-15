@@ -34,7 +34,7 @@ class ExtendedNode {
 
     public void print(Appendable out) throws IOException {
         out.append('<').append(String.valueOf(from.getId()))
-                .append(", ").append(node.getId())
+                .append(", ").append(node.toString())
                 .append(", ").append(to == null ? null : String.valueOf(to.getId()))
                 .append(String.valueOf('>'));
     }
