@@ -7,7 +7,10 @@ import ru.georgeee.itmo.sem6.translation.bunny.parser.GrammarParser;
 import ru.georgeee.itmo.sem6.translation.bunny.processing.Processor;
 import ru.georgeee.itmo.sem6.translation.bunny.processing.SetsComputer;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Main {
     private final String[] args;
@@ -43,6 +46,9 @@ public class Main {
         processor.printItemSets(System.out);
         System.out.append("=============== Extended grammar ================\n");
         processor.printExtendedGrammar(System.out);
+        try (BufferedWriter csvOut = Files.newBufferedWriter(Paths.get("action-goto.csv"))) {
+            processor.printActionGotoTables(csvOut);
+        }
     }
 
     private CharStream getInputStream() throws IOException {

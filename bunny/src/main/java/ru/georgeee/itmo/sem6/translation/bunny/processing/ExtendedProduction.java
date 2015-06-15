@@ -48,4 +48,8 @@ class ExtendedProduction implements IProduction<ExtendedNode> {
         }
         out.append('\n');
     }
+
+    public ItemSet getFinalSet() {
+        return nodes.get(size() - 1).getTo();
+    }
 }

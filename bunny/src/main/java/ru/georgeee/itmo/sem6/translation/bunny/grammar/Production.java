@@ -44,10 +44,7 @@ public class Production implements IProduction<AliasedNode> {
 
     @Override
     public String toString() {
-        return "Production{" +
-                "parent=" + parent.getId() +
-                ", nodes=" + nodes +
-                '}';
+        return parent + "->" + nodes;
     }
 
     public void print(Appendable out) throws IOException {

@@ -17,16 +17,16 @@ public class Nonterminal implements Node, Iterable<Production> {
     @Getter
     private final int nodeId;
     @Getter
-    private final int nonterminalId;
+    private final int nontermId;
     private final List<Production> productions;
     @Getter
     private List<Attr> attributes;
 
-    Nonterminal(Grammar grammar, String id, int nodeId, int nonterminalId) {
+    Nonterminal(Grammar grammar, String id, int nodeId, int nontermId) {
         this.grammar = grammar;
         this.id = id;
         this.nodeId = nodeId;
-        this.nonterminalId = nonterminalId;
+        this.nontermId = nontermId;
         this.productions = new ArrayList<>();
     }
 

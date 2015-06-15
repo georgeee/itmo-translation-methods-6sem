@@ -1,10 +1,11 @@
 package ru.georgeee.itmo.sem6.translation.bunny.processing;
 
 import lombok.Getter;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
 
-class IndexedProduction {
+import java.util.Iterator;
+
+class IndexedProduction implements IProduction<AliasedNode>{
     @Getter
     private final Production production;
     @Getter
@@ -16,6 +17,31 @@ class IndexedProduction {
         }
         this.production = production;
         this.index = index;
+    }
+
+    @Override
+    public AliasedNode get(int index) {
+        return production.get(index);
+    }
+
+    @Override
+    public Nonterminal getParent() {
+        return production.getParent();
+    }
+
+    @Override
+    public int size() {
+        return production.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return production.isEmpty();
+    }
+
+    @Override
+    public Iterator<AliasedNode> iterator() {
+        return production.iterator();
     }
 
     public Node nextNode(){

@@ -21,27 +21,15 @@ class ItemSet implements Iterable<IndexedProduction> {
         this.id = id;
     }
 
-    public boolean isEmpty() {
-        return items.isEmpty();
-    }
-
-    public int size() {
-        return items.size();
-    }
-
     @Override
     public Iterator<IndexedProduction> iterator() {
         return items.iterator();
     }
 
-    public IndexedProduction get(int index) {
-        return items.get(index);
-    }
-
     public void add(IndexedProduction iP, boolean synthetic) {
         int pos = iP.getIndex();
         if (iP.hasNext()) {
-            Node node = iP.getProduction().get(pos).unwrap();
+            Node node = iP.get(pos).unwrap();
             Utils.addToMap(goMap, node, iP);
         }
         if (!synthetic) {
@@ -64,9 +52,8 @@ class ItemSet implements Iterable<IndexedProduction> {
         queue.addAll(items);
         while (!queue.isEmpty()) {
             IndexedProduction iP = queue.remove();
-            Production production = iP.getProduction();
             if (iP.hasNext()) {
-                Node first = production.get(iP.getIndex()).unwrap();
+                Node first = iP.get(iP.getIndex()).unwrap();
                 if (first instanceof Nonterminal) {
                     if (!used.contains(first)) {
                         used.add((Nonterminal) first);
@@ -82,27 +69,22 @@ class ItemSet implements Iterable<IndexedProduction> {
     }
 
     public void print(Appendable out) throws IOException {
-        out.append("Items set for prefix");
-        out.append('\n');
-        printItems(items, out);
-        out.append("--------------------\nGoto map:\n");
+        printItems(items, out, "");
         for (Map.Entry<Node, List<IndexedProduction>> goEntry : goMap.entrySet()) {
-            out.append("node: ").append(goEntry.getKey().getId()).append('\n');
-            printItems(goEntry.getValue(), out);
-            out.append("------------\n");
+            printItems(goEntry.getValue(), out, "+ ");
         }
     }
 
-    private static void printItems(List<IndexedProduction> items, Appendable out) throws IOException {
+    private static void printItems(Iterable<IndexedProduction> items, Appendable out, String prefix) throws IOException {
         for (IndexedProduction iP : items) {
-            out.append(iP.getProduction().getParent().getId()).append(" -> ");
-            for (int i = 0; i < iP.getProduction().size(); ++i) {
+            out.append(prefix).append(iP.getParent().getId()).append(" -> ");
+            for (int i = 0; i < iP.size(); ++i) {
                 if (i == iP.getIndex()) {
                     out.append("• ");
                 }
-                out.append(iP.getProduction().get(i).getId()).append(' ');
+                out.append(iP.get(i).getId()).append(' ');
             }
-            if (iP.getIndex() == iP.getProduction().size()) {
+            if (iP.getIndex() == iP.size()) {
                 out.append("• ");
             }
             out.append('\n');
