@@ -43,7 +43,10 @@ public class Main {
         setsComputer.print(System.out);
         Processor processor = new Processor(grammar);
         processor.compute();
+        System.out.println("---------- Item Sets -----------");
         processor.printItemSets(System.out);
+        System.out.println("---------- Transitions -----------");
+        processor.printTransitions(System.out);
         System.out.append("=============== Extended grammar ================\n");
         processor.printExtendedGrammar(System.out);
         try (BufferedWriter csvOut = Files.newBufferedWriter(Paths.get("action-goto.csv"))) {

@@ -1,24 +1,28 @@
 package ru.georgeee.itmo.sem6.translation.bunny.processing;
 
 import lombok.Getter;
+import lombok.Setter;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Nonterminal;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
-import ru.georgeee.itmo.sem6.translation.bunny.utils.Utils;
 
 import java.io.IOException;
 import java.util.*;
 
 class ItemSet implements Iterable<IndexedProduction> {
+    @Getter @Setter
+    private int id;
     @Getter
-    private final int id;
-    private final List<IndexedProduction> items = new ArrayList<>();
+    private final Set<IndexedProduction> items = new HashSet<>();
 
     @Getter
-    private final Map<Node, List<IndexedProduction>> goMap = new HashMap<>();
+    private final Map<Node, Set<IndexedProduction>> goMap = new HashMap<>();
 
-    public ItemSet(int id) {
-        this.id = id;
+    public ItemSet() {
+    }
+
+    public ItemSet(Collection<IndexedProduction> productions) {
+        addAll(productions, false);
     }
 
     @Override
@@ -26,20 +30,32 @@ class ItemSet implements Iterable<IndexedProduction> {
         return items.iterator();
     }
 
-    public void add(IndexedProduction iP, boolean synthetic) {
-        int pos = iP.getIndex();
-        if (iP.hasNext()) {
-            Node node = iP.get(pos).unwrap();
-            Utils.addToMap(goMap, node, iP);
-        }
-        if (!synthetic) {
-            items.add(iP);
+    public void addAll(Iterable<IndexedProduction> productions, boolean synthetic) {
+        for (IndexedProduction production : productions) {
+            add(production);
         }
     }
 
-    public static ItemSet fillInitial(Nonterminal start, ItemSet itemSet) {
+    public void add(IndexedProduction iP) {
+        int pos = iP.getIndex();
+        if (iP.hasNext()) {
+            Node node = iP.get(pos).unwrap();
+            addToMap(goMap, node, iP);
+        }
+            items.add(iP);
+    }
+
+    private static <K, V> void addToMap(Map<K, Set<V>> map, K key, V value) {
+        Set<V> set = map.get(key);
+        if (set == null) {
+            map.put(key, set = new HashSet<>());
+        }
+        set.add(value);
+    }
+    public static ItemSet createInitial(Nonterminal start) {
+        ItemSet itemSet = new ItemSet();
         for (Production production : start) {
-            itemSet.add(new IndexedProduction(production, 0), false);
+            itemSet.add(new IndexedProduction(production, 0));
         }
         Set<Nonterminal> used = new HashSet<>();
         used.add(start);
@@ -47,6 +63,9 @@ class ItemSet implements Iterable<IndexedProduction> {
         return itemSet;
     }
 
+    public void completeToClosure() {
+        completeToClosure(new HashSet<>());
+    }
     public void completeToClosure(Set<Nonterminal> used) {
         Queue<IndexedProduction> queue = new ArrayDeque<>();
         queue.addAll(items);
@@ -59,7 +78,7 @@ class ItemSet implements Iterable<IndexedProduction> {
                         used.add((Nonterminal) first);
                         for (Production synProduction : (Nonterminal) first) {
                             IndexedProduction synIP = new IndexedProduction(synProduction, 0);
-                            add(synIP, true);
+                            add(synIP);
                             queue.add(synIP);
                         }
                     }
@@ -68,11 +87,25 @@ class ItemSet implements Iterable<IndexedProduction> {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ItemSet itemSet = (ItemSet) o;
+
+        if (!items.equals(itemSet.items)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return items.hashCode();
+    }
+
     public void print(Appendable out) throws IOException {
         printItems(items, out, "");
-        for (Map.Entry<Node, List<IndexedProduction>> goEntry : goMap.entrySet()) {
-            printItems(goEntry.getValue(), out, "+ ");
-        }
     }
 
     private static void printItems(Iterable<IndexedProduction> items, Appendable out, String prefix) throws IOException {

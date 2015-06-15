@@ -12,8 +12,8 @@ import java.util.*;
 
 public class Processor {
     private static final Logger log = LoggerFactory.getLogger(Processor.class);
-    private final List<ItemSet> itemSets = new ArrayList<>();
-    private final Map<IndexedProduction, ItemSet> allItems = new HashMap<>();
+    private final Map<ItemSet, ItemSet> itemsetMap = new HashMap<>();
+    private final List<ItemSet> itemsets = new ArrayList<>();
     private final ExtendedGrammar extendedGrammar;
 
     private ItemSet[][] transitionTable;
@@ -37,12 +37,24 @@ public class Processor {
         computeActionGotoTables();
     }
 
+    public void printTransitions(Appendable out) throws IOException {
+        for (int i = 0; i < itemsets.size(); ++i) {
+            for (Node node : grammar.getNodes()) {
+                ItemSet to = transitionTable[i][node.getNodeId()];
+                out.append(String.valueOf(i)).append(" + ")
+                        .append(node.toString()).append(" -> ")
+                        .append(String.valueOf(to == null ? null : to.getId()))
+                        .append(String.valueOf('\n'));
+            }
+        }
+    }
+
     public void computeActionGotoTables() {
-        actionTable = new int[itemSets.size()][grammar.getTerminals().size() + 1];
-        actionTypeTable = new Action[itemSets.size()][grammar.getTerminals().size() + 1];
-        gotoTable = new int[itemSets.size()][grammar.getNonterminals().size()];
-        for (int i = 0; i < itemSets.size(); ++i) {
-//            if (containsFinishingProduction(itemSets.get(i))) {
+        actionTable = new int[itemsets.size()][grammar.getTerminals().size() + 1];
+        actionTypeTable = new Action[itemsets.size()][grammar.getTerminals().size() + 1];
+        gotoTable = new int[itemsets.size()][grammar.getNonterminals().size()];
+        for (int i = 0; i < itemsets.size(); ++i) {
+//            if (containsFinishingProduction(itemsets.get(i))) {
 //                actionTypeTable[i][0] = Action.ACCEPT;
 //            }
             for (Node node : grammar.getNodes()) {
@@ -84,34 +96,27 @@ public class Processor {
         }
     }
 
-    private boolean containsFinishingProduction(ItemSet itemSet) {
-        for (IndexedProduction production : itemSet) {
-            if (!production.hasNext() && production.getParent().unwrap() == grammar.getStart().unwrap()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private ItemSet createItemSet() {
-        return new ItemSet(itemSets.size());
-    }
+//    private boolean containsFinishingProduction(ItemSet itemSet) {
+//        for (IndexedProduction production : itemSet) {
+//            if (!production.hasNext() && production.getParent().unwrap() == grammar.getStart().unwrap()) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
     private void computeItemSets() {
-        addItemSet(ItemSet.fillInitial(grammar.getStart(), createItemSet()));
+        addItemSet(ItemSet.createInitial(grammar.getStart()));
         int i = 0;
-        while (i < itemSets.size()) {
-            ItemSet itemSet = itemSets.get(i);
-            for (Map.Entry<Node, List<IndexedProduction>> goEntry : itemSet.getGoMap().entrySet()) {
-                List<IndexedProduction> productions = goEntry.getValue();
+        while (i < itemsets.size()) {
+            ItemSet itemSet = itemsets.get(i);
+            for (Map.Entry<Node, Set<IndexedProduction>> goEntry : itemSet.getGoMap().entrySet()) {
+                Set<IndexedProduction> productions = goEntry.getValue();
                 if (productions.isEmpty()) {
                     throw new IllegalArgumentException("Empty productions");
-                } else if (!needNewItemSet(productions)) {
-                    ItemSet newItemSet = createItemSet();
-                    for (IndexedProduction production : productions) {
-                        newItemSet.add(production.next(), false);
-                    }
-                    newItemSet.completeToClosure(new HashSet<Nonterminal>());
+                } else {
+                    ItemSet newItemSet = new ItemSet(iterate(productions));
+                    newItemSet.completeToClosure();
                     addItemSet(newItemSet);
                 }
             }
@@ -119,24 +124,37 @@ public class Processor {
         }
     }
 
+    private Set<IndexedProduction> iterate(Collection<IndexedProduction> productions) {
+        Set<IndexedProduction> set = new HashSet<>();
+        for (IndexedProduction production : productions) {
+            if (!production.hasNext()) {
+                log.error("Can't iterate {}", production);
+            }
+            set.add(production.next());
+        }
+        return set;
+    }
+
     private void computeTransitionTable() {
-        transitionTable = new ItemSet[itemSets.size()][grammar.getNodeCount()];
-        for (ItemSet from : itemSets) {
-            for (Map.Entry<Node, List<IndexedProduction>> goEntry : from.getGoMap().entrySet()) {
-                List<IndexedProduction> productions = goEntry.getValue();
-                IndexedProduction someProduction = productions.get(0);
+        transitionTable = new ItemSet[itemsets.size()][grammar.getNodeCount()];
+        for (ItemSet from : itemsets) {
+            for (Map.Entry<Node, Set<IndexedProduction>> goEntry : from.getGoMap().entrySet()) {
+                ItemSet itemSet = new ItemSet(iterate(goEntry.getValue()));
+                itemSet.completeToClosure();
                 Node node = goEntry.getKey();
-                ItemSet to = allItems.get(someProduction.next());
+                ItemSet to = itemsetMap.get(itemSet);
+                if (to == null) {
+                    log.error("Null destination for {}, {}", from.getId(), node);
+                }
                 transitionTable[from.getId()][node.getNodeId()] = to;
             }
         }
     }
 
     private void computeExtendedGrammar() {
-        for (ItemSet from : itemSets) {
-            for (Map.Entry<Node, List<IndexedProduction>> goEntry : from.getGoMap().entrySet()) {
-                List<IndexedProduction> productions = goEntry.getValue();
-                IndexedProduction someProduction = productions.get(0);
+        for (ItemSet from : itemsets) {
+            for (Map.Entry<Node, Set<IndexedProduction>> goEntry : from.getGoMap().entrySet()) {
+                Set<IndexedProduction> productions = goEntry.getValue();
                 for (IndexedProduction iP : productions) {
                     if (iP.getIndex() == 0) {
                         extendedGrammar.add(createExtendedProduction(from, iP));
@@ -164,23 +182,16 @@ public class Processor {
         return transitionTable[from.getId()][key.getNodeId()];
     }
 
-    private boolean needNewItemSet(List<IndexedProduction> productions) {
-        //if item set is present, then
-        return allItems.containsKey(productions.get(0).next());
-    }
-
     private void addItemSet(ItemSet itemSet) {
-        for (IndexedProduction iP : itemSet) {
-            ItemSet prev = allItems.put(iP, itemSet);
-            if (prev != null) {
-                log.warn("Duplicate production {}: replaced item set #{} with #{}", iP, prev, itemSet);
-            }
+        if (!itemsetMap.containsKey(itemSet)) {
+            itemSet.setId(itemsets.size());
+            itemsetMap.put(itemSet, itemSet);
+            itemsets.add(itemSet);
         }
-        itemSets.add(itemSet);
     }
 
     public void printItemSets(Appendable out) throws IOException {
-        for (ItemSet itemSet : itemSets) {
+        for (ItemSet itemSet : itemsets) {
             out.append("========= ").append(String.valueOf(itemSet.getId())).append(" ==========\n");
             itemSet.print(out);
         }
@@ -204,7 +215,7 @@ public class Processor {
             out.append(node.toString()).append(tableDelim);
         }
         out.append('\n');
-        for (int i = 0; i < itemSets.size(); ++i) {
+        for (int i = 0; i < itemsets.size(); ++i) {
             out.append(String.valueOf(i)).append(tableDelim);
             for (int j = 0; j < grammar.getTerminals().size() + 1; ++j) {
                 if (actionTypeTable[i][j] != null) {

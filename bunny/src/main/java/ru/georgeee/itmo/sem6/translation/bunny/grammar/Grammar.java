@@ -34,11 +34,6 @@ public class Grammar implements Iterable<Production> {
         headerCodeBlock = headerCodeBlock == null ? block : headerCodeBlock + block;
     }
 
-
-    public Collection<Nonterminal> getNonterminals() {
-        return nonterminalMap.values();
-    }
-
     public void setStart(String start) {
         this.start = getOrCreateNonterminal(start);
     }
