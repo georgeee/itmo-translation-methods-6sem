@@ -28,8 +28,8 @@ class ExtendedGrammar implements Iterable<ExtendedProduction> {
         return productions.iterator();
     }
 
-    public SetsComputer createSetsComputer(){
-        return new SetsComputer(productions, nodes, originalGrammar.getStart());
+    public FirstFollow createFirstFollow(){
+        return new FirstFollow(productions, nodes, originalGrammar.getStart());
     }
 
     public int size() {

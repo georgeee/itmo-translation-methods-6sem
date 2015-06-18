@@ -2,7 +2,6 @@ package ru.georgeee.itmo.sem6.translation.bunny.processing;
 
 import lombok.Getter;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.IProduction;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -12,10 +11,10 @@ class ExtendedProduction implements IProduction<ExtendedNode> {
     @Getter
     private final ExtendedNode parent;
     @Getter
-    private final Production production;
+    private final IndexedProduction production;
     private final List<ExtendedNode> nodes;
 
-    ExtendedProduction(ExtendedNode parent, Production production, List<ExtendedNode> nodes) {
+    ExtendedProduction(ExtendedNode parent, IndexedProduction production, List<ExtendedNode> nodes) {
         this.parent = parent;
         this.production = production;
         this.nodes = nodes;
@@ -51,5 +50,9 @@ class ExtendedProduction implements IProduction<ExtendedNode> {
 
     public ItemSet getFinalSet() {
         return nodes.get(size() - 1).getTo();
+    }
+
+    public int getId() {
+        return getProduction().getProduction().getId();
     }
 }

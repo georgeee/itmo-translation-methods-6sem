@@ -27,11 +27,10 @@ public abstract class Parser<E extends Enum<E>, T extends Token<E>> {
         Deque<Integer> stack = new ArrayDeque<>();
         stack.push(0);
         T token = reader.nextToken();
-        tokenReadCallback(token);
         log.debug("Init: read {}", token);
-        do {
+        while (true){
             int currentState = stack.getFirst();
-            log.debug("top: {}", currentState);
+            log.debug("===== Iteration: {}, token={}", stack, token);
             int actionIndex = getActionIndex(token);
             Action action = tables.actionType[currentState][actionIndex];
             int id = tables.action[currentState][actionIndex];
@@ -57,8 +56,8 @@ public abstract class Parser<E extends Enum<E>, T extends Token<E>> {
                     if (token == null) {
                         throw new ParseException("Syntax error: unexpected end of input");
                     }
-                    token = reader.nextToken();
                     tokenReadCallback(token);
+                    token = reader.nextToken();
                     stack.push(id);
                     log.debug("read {}", token);
                     log.debug("pushed {}", id);
@@ -67,7 +66,7 @@ public abstract class Parser<E extends Enum<E>, T extends Token<E>> {
                     log.info("accepted");
                     return;
             }
-        } while (true);
+        }
     }
 
     private int getActionIndex(T token) throws ParseException {

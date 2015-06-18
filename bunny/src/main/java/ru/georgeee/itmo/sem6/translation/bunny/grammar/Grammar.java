@@ -2,7 +2,7 @@ package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 
 import lombok.Getter;
 import lombok.Setter;
-import ru.georgeee.itmo.sem6.translation.bunny.processing.SetsComputer;
+import ru.georgeee.itmo.sem6.translation.bunny.processing.FirstFollow;
 import ru.georgeee.itmo.sem6.translation.bunny.runtime.GrammarResolver;
 
 import java.io.IOException;
@@ -76,8 +76,8 @@ public class Grammar implements Iterable<Production>, GrammarResolver {
         return productions.size();
     }
 
-    public SetsComputer createSetsComputer() {
-        return new SetsComputer(productions, nodes, start);
+    public FirstFollow createFirstFollow() {
+        return new FirstFollow(productions, nodes, start);
     }
 
     @Override
@@ -125,5 +125,9 @@ public class Grammar implements Iterable<Production>, GrammarResolver {
     @Override
     public int getLeftNonTermId(int productionId) {
         return productions.get(productionId).getParent().getNontermId();
+    }
+
+    public boolean isStart(Node node) {
+        return node.unwrap() == start.unwrap();
     }
 }

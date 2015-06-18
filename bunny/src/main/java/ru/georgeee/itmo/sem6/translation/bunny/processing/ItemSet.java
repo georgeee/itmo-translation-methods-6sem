@@ -2,15 +2,20 @@ package ru.georgeee.itmo.sem6.translation.bunny.processing;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Nonterminal;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Production;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.Terminal;
 
 import java.io.IOException;
 import java.util.*;
 
 class ItemSet implements Iterable<IndexedProduction> {
-    @Getter @Setter
+    private static final Logger log = LoggerFactory.getLogger(Processor.class);
+    @Getter
+    @Setter
     private int id;
     @Getter
     private final Set<IndexedProduction> items = new HashSet<>();
@@ -18,11 +23,15 @@ class ItemSet implements Iterable<IndexedProduction> {
     @Getter
     private final Map<Node, Set<IndexedProduction>> goMap = new HashMap<>();
 
-    public ItemSet() {
+    private final FirstFollow firstFollow;
+
+    public ItemSet(FirstFollow firstFollow) {
+        this.firstFollow = firstFollow;
     }
 
-    public ItemSet(Collection<IndexedProduction> productions) {
-        addAll(productions, false);
+    public ItemSet(Collection<IndexedProduction> productions, FirstFollow firstFollow) {
+        this.firstFollow = firstFollow;
+        addAll(productions);
     }
 
     @Override
@@ -30,7 +39,7 @@ class ItemSet implements Iterable<IndexedProduction> {
         return items.iterator();
     }
 
-    public void addAll(Iterable<IndexedProduction> productions, boolean synthetic) {
+    public void addAll(Iterable<IndexedProduction> productions) {
         for (IndexedProduction production : productions) {
             add(production);
         }
@@ -42,7 +51,7 @@ class ItemSet implements Iterable<IndexedProduction> {
             Node node = iP.get(pos).unwrap();
             addToMap(goMap, node, iP);
         }
-            items.add(iP);
+        items.add(iP);
     }
 
     private static <K, V> void addToMap(Map<K, Set<V>> map, K key, V value) {
@@ -52,39 +61,53 @@ class ItemSet implements Iterable<IndexedProduction> {
         }
         set.add(value);
     }
-    public static ItemSet createInitial(Nonterminal start) {
-        ItemSet itemSet = new ItemSet();
+
+    public static ItemSet createInitial(Nonterminal start, FirstFollow firstFollow) {
+        ItemSet itemSet = new ItemSet(firstFollow);
         for (Production production : start) {
-            itemSet.add(new IndexedProduction(production, 0));
+            itemSet.add(new IndexedProduction(production, 0, null));
         }
-        Set<Nonterminal> used = new HashSet<>();
-        used.add(start);
-        itemSet.completeToClosure(used);
+        itemSet.completeToClosure();
         return itemSet;
     }
 
     public void completeToClosure() {
-        completeToClosure(new HashSet<>());
-    }
-    public void completeToClosure(Set<Nonterminal> used) {
         Queue<IndexedProduction> queue = new ArrayDeque<>();
         queue.addAll(items);
+//        log.debug("complete to closure: {}", getItems());
+//        log.debug("init queue: {}", queue);
+        Set<IndexedProduction> used = new HashSet<>();
         while (!queue.isEmpty()) {
             IndexedProduction iP = queue.remove();
+//            log.debug("Took from queue: {}, {}", iP, iP.hasNext());
             if (iP.hasNext()) {
                 Node first = iP.get(iP.getIndex()).unwrap();
                 if (first instanceof Nonterminal) {
-                    if (!used.contains(first)) {
-                        used.add((Nonterminal) first);
-                        for (Production synProduction : (Nonterminal) first) {
-                            IndexedProduction synIP = new IndexedProduction(synProduction, 0);
-                            add(synIP);
-                            queue.add(synIP);
+//                    log.debug("for production {}", iP);
+                    for (Production synProduction : (Nonterminal) first) {
+                        for (Terminal terminal : getFirstSet(iP)) {
+                            IndexedProduction synIP = new IndexedProduction(synProduction, 0, terminal);
+                            if(!used.contains(synIP)){
+                                used.add(synIP);
+                                add(synIP);
+                                queue.add(synIP);
+                            }
+//                            log.debug("generating production: {}", synIP);
                         }
                     }
                 }
             }
         }
+    }
+
+
+    private Set<Terminal> getFirstSet(IndexedProduction iP) {
+        List<? extends Node> nodes = iP.getProduction().getNodes().subList(iP.getIndex() + 1, iP.getProduction().size());
+        Set<Terminal> set = firstFollow.getFirst(nodes);
+        if (firstFollow.isNullable(nodes)) {
+            set.add(iP.getTerminal());
+        }
+        return set;
     }
 
     @Override
@@ -106,6 +129,10 @@ class ItemSet implements Iterable<IndexedProduction> {
 
     public void print(Appendable out) throws IOException {
         printItems(items, out, "");
+        out.append("======= Goto map =====\n");
+        for (Map.Entry<Node, Set<IndexedProduction>> entry : goMap.entrySet()) {
+            printItems(entry.getValue(), out, "  " + entry.getKey().toString() + ": ");
+        }
     }
 
     private static void printItems(Iterable<IndexedProduction> items, Appendable out, String prefix) throws IOException {
@@ -120,7 +147,7 @@ class ItemSet implements Iterable<IndexedProduction> {
             if (iP.getIndex() == iP.size()) {
                 out.append("• ");
             }
-            out.append('\n');
+            out.append(" ; ").append(String.valueOf(iP.getTerminal())).append('\n');
         }
     }
 }

@@ -11,6 +11,7 @@ public class Production implements IProduction<AliasedNode> {
     private final Nonterminal parent;
     @Getter
     private final int id;
+    @Getter
     private final List<AliasedNode> nodes;
     @Getter
     private final String codeBlock;

@@ -4,19 +4,28 @@ import lombok.Getter;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
 
 import java.util.Iterator;
+import java.util.Objects;
 
-class IndexedProduction implements IProduction<AliasedNode>{
+class IndexedProduction implements IProduction<AliasedNode> {
     @Getter
     private final Production production;
     @Getter
     private final int index;
+    @Getter
+    private final Terminal terminal;
 
-    public IndexedProduction(Production production, int index) {
+    public IndexedProduction(Production production, int index, Terminal terminal) {
         if (index > production.size()) {
             throw new IllegalArgumentException("Can't create indexed production: index=" + index + " production=" + production);
         }
         this.production = production;
         this.index = index;
+        this.terminal = terminal;
+    }
+
+
+    public IndexedProduction next() {
+        return new IndexedProduction(production, index + 1, terminal);
     }
 
     @Override
@@ -44,42 +53,43 @@ class IndexedProduction implements IProduction<AliasedNode>{
         return production.iterator();
     }
 
-    public Node nextNode(){
+    public Node nextNode() {
         return production.get(index).unwrap();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getParent()).append(" -> ");
+        for (int i = 0; i < production.size(); ++i) {
+            if (i == index) {
+                sb.append(" • ");
+            }
+            sb.append(production.get(i));
+        }
+        if (index == production.size()) {
+            sb.append(" • ");
+        }
+        sb.append("; ").append(terminal);
+        return sb.toString();
+    }
+
+    public boolean hasNext() {
+        return index < production.size();
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof IndexedProduction)) return false;
         IndexedProduction that = (IndexedProduction) o;
-
-        if (index != that.index) return false;
-        if (!production.equals(that.production)) return false;
-
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "{" + production +
-                ", " + index +
-                '}';
+        return Objects.equals(index, that.index) &&
+                Objects.equals(production, that.production) &&
+                Objects.equals(terminal, that.terminal);
     }
 
     @Override
     public int hashCode() {
-        int result = production.hashCode();
-        result = 31 * result + index;
-        return result;
-    }
-
-    public boolean hasNext(){
-        return index < production.size();
-    }
-
-    public IndexedProduction next() {
-        return new IndexedProduction(production, index + 1);
+        return Objects.hash(production, index, terminal);
     }
 }

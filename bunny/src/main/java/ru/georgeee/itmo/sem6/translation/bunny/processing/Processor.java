@@ -21,7 +21,7 @@ public class Processor {
     private ItemSet[][] transitionTable;
 
     private final Grammar grammar;
-    private SetsComputer setsComputer;
+    private FirstFollow firstFollow;
 
     private int[][] actionTable;
     private Action[][] actionTypeTable;
@@ -33,6 +33,8 @@ public class Processor {
     }
 
     public void compute() {
+        firstFollow = grammar.createFirstFollow();
+        firstFollow.compute();
         computeItemSets();
         computeTransitionTable();
         computeExtendedGrammar();
@@ -79,32 +81,25 @@ public class Processor {
                 }
             }
         }
-        setsComputer = extendedGrammar.createSetsComputer();
-        setsComputer.compute();
         for (ExtendedProduction production : extendedGrammar) {
+            if (grammar.isStart(production.getParent())) {
+                continue;
+            }
             ItemSet finalSet = production.getFinalSet();
             int finalSetId = finalSet.getId();
-            int productionId = production.getProduction().getId();
-            Set<Terminal> follow = setsComputer.getFollow().get(production.getParent().getNodeId());
-            for (Terminal terminal : follow) {
-                int termId = terminal == null ? 0 : terminal.getTermId() + 1;
-                int prev = actionTable[finalSetId][termId];
-                if (prev != productionId) {
-                    if (prev != -1 && actionTypeTable[finalSetId][termId] == Action.REDUCE) {
-                        log.warn("Duplicate candidate (reduce) for final set {}, terminal {}: candidate={} prev={}", finalSet.getId(), terminal, production.getProduction(), grammar.get(prev));
-//                        log.warn("Tried to replace {} {}, with reduce: finalSet={} terminal={} candidate={}", actionTypeTable[finalSetId][termId], actionTable[finalSetId][termId], finalSet.getId(), terminal, production.getProduction());
-                    } else {
-                        actionTypeTable[finalSetId][termId] = Action.REDUCE;
-                        actionTable[finalSetId][termId] = productionId;
-                    }
-                }
-            }
+            int productionId = production.getId();
+            Terminal terminal = production.getProduction().getTerminal();
+            int termId = terminal == null ? 0 : 1 + terminal.getTermId();
+            actionTypeTable[finalSetId][termId] = Action.REDUCE;
+            actionTable[finalSetId][termId] = productionId;
         }
     }
 
     private boolean containsFinishingProduction(ItemSet itemSet) {
         for (IndexedProduction production : itemSet) {
-            if (!production.hasNext() && production.getParent().unwrap() == grammar.getStart().unwrap()) {
+            if (!production.hasNext()
+                    && grammar.isStart(production.getParent())
+                    && production.getTerminal() == null) {
                 return true;
             }
         }
@@ -112,16 +107,18 @@ public class Processor {
     }
 
     private void computeItemSets() {
-        addItemSet(ItemSet.createInitial(grammar.getStart()));
+        addItemSet(ItemSet.createInitial(grammar.getStart(), firstFollow));
         int i = 0;
         while (i < itemsets.size()) {
+            log.debug("Itemset #{} : {}", i, itemsets.get(i).getItems());
             ItemSet itemSet = itemsets.get(i);
             for (Map.Entry<Node, Set<IndexedProduction>> goEntry : itemSet.getGoMap().entrySet()) {
                 Set<IndexedProduction> productions = goEntry.getValue();
+                log.debug("goEntry {}: {}", goEntry.getKey(), productions);
                 if (productions.isEmpty()) {
                     throw new IllegalArgumentException("Empty productions");
                 } else {
-                    ItemSet newItemSet = new ItemSet(iterate(productions));
+                    ItemSet newItemSet = new ItemSet(iterate(productions), firstFollow);
                     newItemSet.completeToClosure();
                     addItemSet(newItemSet);
                 }
@@ -145,7 +142,7 @@ public class Processor {
         transitionTable = new ItemSet[itemsets.size()][grammar.getNodeCount()];
         for (ItemSet from : itemsets) {
             for (Map.Entry<Node, Set<IndexedProduction>> goEntry : from.getGoMap().entrySet()) {
-                ItemSet itemSet = new ItemSet(iterate(goEntry.getValue()));
+                ItemSet itemSet = new ItemSet(iterate(goEntry.getValue()), firstFollow);
                 itemSet.completeToClosure();
                 Node node = goEntry.getKey();
                 ItemSet to = itemsetMap.get(itemSet);
@@ -181,7 +178,7 @@ public class Processor {
         }
         Node parent = production.getParent();
         ExtendedNode extParent = extendedGrammar.createNode(from, transitionTable[from.getId()][parent.getNodeId()], parent);
-        return new ExtendedProduction(extParent, production.getProduction(), nodes);
+        return new ExtendedProduction(extParent, production, nodes);
     }
 
     private ItemSet go(ItemSet from, Node key) {
@@ -190,9 +187,12 @@ public class Processor {
 
     private void addItemSet(ItemSet itemSet) {
         if (!itemsetMap.containsKey(itemSet)) {
+            log.debug("Added item set: {}", itemSet.getItems());
             itemSet.setId(itemsets.size());
             itemsetMap.put(itemSet, itemSet);
             itemsets.add(itemSet);
+        } else {
+            log.info("Rejecting {}", itemSet.getItems());
         }
     }
 
@@ -208,7 +208,7 @@ public class Processor {
             production.print(out);
         }
         out.append("-------- Sets --------\n");
-        setsComputer.print(out);
+//        extFirstFollow.print(out);
     }
 
     public void printActionGotoTables(Appendable out) throws IOException {
@@ -232,9 +232,9 @@ public class Processor {
                         case SHIFT:
                             out.append("s").append(String.valueOf(actionTable[i][j]));
                             break;
-//                        case ACCEPT:
-//                            out.append("a");
-//                            break;
+                        case ACCEPT:
+                            out.append("accept");
+                            break;
                     }
                 }
                 out.append(tableDelim);

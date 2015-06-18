@@ -8,7 +8,7 @@ import ru.georgeee.itmo.sem6.translation.bunny.grammar.Terminal;
 import java.io.IOException;
 import java.util.*;
 
-public class SetsComputer {
+public class FirstFollow {
     private final List<? extends IProduction<? extends Node>> productions;
     private final List<? extends Node> nodes;
     private final Node start;
@@ -19,7 +19,7 @@ public class SetsComputer {
     @Getter
     private final List<Set<Terminal>> follow = new ArrayList<>();
 
-    public SetsComputer(List<? extends IProduction<? extends Node>> productions, List<? extends Node> nodes, Node start) {
+    public FirstFollow(List<? extends IProduction<? extends Node>> productions, List<? extends Node> nodes, Node start) {
         this.productions = productions;
         this.nodes = nodes;
         this.start = start;
@@ -33,7 +33,9 @@ public class SetsComputer {
     private void init() {
         for (Node node : nodes) {
             if (node.isTerminal()) {
-                first.add(Collections.singleton((Terminal) node.unwrap()));
+                Set<Terminal> initFirst = new HashSet<>();
+                initFirst.add((Terminal) node.unwrap());
+                first.add(initFirst);
                 follow.add(null);
             } else {
                 first.add(new HashSet<>());
@@ -122,5 +124,31 @@ public class SetsComputer {
                 out.append("follow: ").append(follow.get(i).toString()).append("\n");
             }
         }
+    }
+
+    public Set<Terminal> getFirst(Node node) {
+        return first.get(node.getNodeId());
+    }
+    public Set<Terminal> getFirst(Iterable<? extends Node> nodes) {
+        Set<Terminal> result = new HashSet<>();
+        for(Node node : nodes){
+            result.addAll(getFirst(node));
+            if(!isNullable(node)){
+                break;
+            }
+        }
+        return result;
+    }
+
+    public boolean isNullable(Iterable<?extends Node> nodes) {
+        for(Node node : nodes){
+            if(!isNullable(node)){
+                return false;
+            }
+        }
+        return true;
+    }
+    public boolean isNullable(Node node) {
+        return nullable.get(node.getNodeId());
     }
 }
