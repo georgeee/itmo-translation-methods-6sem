@@ -9,9 +9,11 @@ import java.util.Collections;
 
 grammarDef returns [Grammar v] : g=grammarDef p=packageDef { $v = $g.v; $g.v.setPackageName($p.v); }
                                | g=grammarDef c=classDef { $v = $g.v; $g.v.setClassName($c.v); }
-                               | g=grammarDef s=startDef { $v = $g.v; $g.v.setStart($s.v); }
+                               | g=grammarDef s=startDef { $v = $g.v; $g.v.bindStart($s.v); }
                                | g=grammarDef h=headerDef { $v = $g.v; $g.v.addHeaderCodeBlock($h.v); }
                                | g=grammarDef r=ruleDef { $v = $g.v; addRule($g.v, $r.v); }
+                               | g=grammarDef e=enumTypeDef { $v = $g.v; $g.v.setEnumType($e.v); }
+                               | g=grammarDef t=tokenTypeDef { $v = $g.v; $g.v.setTokenType($t.v); }
                                | {$v = new Grammar();} ;
 
 dotSeparatedId returns [String v]: id=Id {$v = $id.text;} | id=DotSeparatedId {$v = $id.text;};
@@ -19,6 +21,8 @@ dotSeparatedId returns [String v]: id=Id {$v = $id.text;} | id=DotSeparatedId {$
 packageDef returns [String v] : Package id=dotSeparatedId { $v = $id.v; };
 classDef returns [String v]: Class id=Id { $v = $id.text; };
 startDef returns [String v]: Start id=Id { $v = $id.text; };
+enumTypeDef returns [String v]: EnumType id=dotSeparatedId { $v = $id.v; };
+tokenTypeDef returns [String v]: TokenType id=javaType { $v = $id.v; };
 headerDef returns [String v]: Header c=CodeBlock { $v = $c.text; };
 ruleDef returns [PreRule v]: id=Id al=attrList Impl ps=productions Semicolon { $v = new PreRule($id.text, $al.v, $ps.v); };
 productions returns [List<PreProduction> v]: p=production { $v = new ArrayList<>(); $v.add($p.v); }
@@ -39,7 +43,8 @@ attrList_ returns [List<Attr> v]: attr {$v = new ArrayList<>(); $v.add($attr.v);
                                                | as=attrList_ Comma attr {$v = $as.v; $v.add($attr.v);};
 
 attr returns [Attr v]: t=javaType id=Id {$v = new Attr($t.v, $id.text);};
-javaType returns [String v]: id=dotSeparatedId { $v = $id.v; }| id=dotSeparatedId LAngle args=javaTypeArgs RAngle { $v = $id.v + "<" + $args.v + ">"; };
+javaType returns [String v]: id=dotSeparatedId { $v = $id.v; }| id=dotSeparatedId LAngle args=javaTypeArgs RAngle { $v = $id.v + "<" + $args.v + ">"; }
+            | id=dotSeparatedId LAngle Quest RAngle { $v = $id.v + "<?>"; };
 javaTypeArgs returns [String v]: t=javaType {$v = $t.v;} | ts=javaTypeArgs Comma t=javaType {$v = $ts.v + ", " + $t.v;};
 
 
@@ -53,6 +58,8 @@ Package: '%package';
 Class: '%class';
 Header: '%header';
 Start: '%start';
+EnumType: '%enum';
+TokenType: '%token';
 
 fragment IdF : [_A-Za-z][_A-Za-z0-9]*;
 TerminalId: '@' [_A-Za-z0-9]* {setText(getText().substring(1));};
@@ -67,3 +74,4 @@ RAngle: '>';
 Comma: ',';
 Impl: '->' | '→';
 Or: '|';
+Quest: '?';

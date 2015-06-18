@@ -5,11 +5,11 @@ import lombok.Getter;
 /**
  * Created by georgeee on 11.05.15.
  */
-public class UnaryOp implements Expression {
-    private final Expression a;
+public class UnaryOp implements Expr {
+    private final Expr a;
     private final Type type;
 
-    public UnaryOp(Expression a, Type type) {
+    public UnaryOp(Expr a, Type type) {
         this.a = a;
         this.type = type;
     }

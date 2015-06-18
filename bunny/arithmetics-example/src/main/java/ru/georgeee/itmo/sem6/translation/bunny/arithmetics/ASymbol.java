@@ -1,7 +1,7 @@
 package ru.georgeee.itmo.sem6.translation.bunny.arithmetics;
 
 import lombok.Getter;
-import ru.georgeee.itmo.sem6.translation.bunny.Token;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.Token;
 
 public class ASymbol<T> implements Token<ASym> {
     @Getter

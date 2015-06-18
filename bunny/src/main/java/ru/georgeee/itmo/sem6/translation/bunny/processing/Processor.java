@@ -6,6 +6,8 @@ import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Nonterminal;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Terminal;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.Action;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.TableHolder;
 
 import java.io.IOException;
 import java.util.*;
@@ -49,14 +51,18 @@ public class Processor {
         }
     }
 
+    public TableHolder createTableHolder() {
+        return new TableHolder(actionTable, actionTypeTable, gotoTable);
+    }
+
     public void computeActionGotoTables() {
         actionTable = new int[itemsets.size()][grammar.getTerminals().size() + 1];
         actionTypeTable = new Action[itemsets.size()][grammar.getTerminals().size() + 1];
         gotoTable = new int[itemsets.size()][grammar.getNonterminals().size()];
         for (int i = 0; i < itemsets.size(); ++i) {
-//            if (containsFinishingProduction(itemsets.get(i))) {
-//                actionTypeTable[i][0] = Action.ACCEPT;
-//            }
+            if (containsFinishingProduction(itemsets.get(i))) {
+                actionTypeTable[i][0] = Action.ACCEPT;
+            }
             for (Node node : grammar.getNodes()) {
                 ItemSet to = transitionTable[i][node.getNodeId()];
                 int toId = to == null ? -1 : to.getId();
@@ -96,14 +102,14 @@ public class Processor {
         }
     }
 
-//    private boolean containsFinishingProduction(ItemSet itemSet) {
-//        for (IndexedProduction production : itemSet) {
-//            if (!production.hasNext() && production.getParent().unwrap() == grammar.getStart().unwrap()) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
+    private boolean containsFinishingProduction(ItemSet itemSet) {
+        for (IndexedProduction production : itemSet) {
+            if (!production.hasNext() && production.getParent().unwrap() == grammar.getStart().unwrap()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private void computeItemSets() {
         addItemSet(ItemSet.createInitial(grammar.getStart()));
@@ -242,8 +248,4 @@ public class Processor {
 
     }
 
-    public static enum Action {
-        REDUCE, SHIFT
-//        , ACCEPT
-    }
 }

@@ -5,10 +5,10 @@ import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
 import ru.georgeee.itmo.sem6.translation.bunny.parser.GrammarLexer;
 import ru.georgeee.itmo.sem6.translation.bunny.parser.GrammarParser;
 import ru.georgeee.itmo.sem6.translation.bunny.processing.Processor;
-import ru.georgeee.itmo.sem6.translation.bunny.processing.SetsComputer;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.Generator;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.TableHolder;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -35,23 +35,42 @@ public class Main {
 
     public void run(GrammarParser parser) throws IOException {
         Grammar grammar = parser.grammarDef().v;
-        SetsComputer setsComputer = grammar.createSetsComputer();
-        setsComputer.compute();
-        System.out.println("Grammar:");
-        grammar.print(System.out);
-        System.out.println("---------- Sets -----------");
-        setsComputer.print(System.out);
+//        SetsComputer setsComputer = grammar.createSetsComputer();
+//        setsComputer.compute();
+//        System.out.println("Grammar:");
+//        grammar.print(System.out);
+//        System.out.println("---------- Sets -----------");
+//        setsComputer.print(System.out);
         Processor processor = new Processor(grammar);
         processor.compute();
-        System.out.println("---------- Item Sets -----------");
-        processor.printItemSets(System.out);
-        System.out.println("---------- Transitions -----------");
-        processor.printTransitions(System.out);
-        System.out.append("=============== Extended grammar ================\n");
-        processor.printExtendedGrammar(System.out);
+//        System.out.println("---------- Item Sets -----------");
+//        processor.printItemSets(System.out);
+//        System.out.println("---------- Transitions -----------");
+//        processor.printTransitions(System.out);
+//        System.out.append("=============== Extended grammar ================\n");
+//        processor.printExtendedGrammar(System.out);
         try (BufferedWriter csvOut = Files.newBufferedWriter(Paths.get("action-goto.csv"))) {
             processor.printActionGotoTables(csvOut);
         }
+        TableHolder tables = processor.createTableHolder();
+        Generator generator = new Generator(grammar, tables);
+        generator.generate(getOutStream(grammar));
+//        Test test = new Test(processor.createTableHolder());
+//        try {
+//            test.test(grammar);
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    private PrintStream getOutStream(Grammar grammar) throws FileNotFoundException {
+        return new PrintStream(new FileOutputStream(getOutFile(grammar)));
+    }
+
+    private File getOutFile(Grammar grammar) {
+        String path = args[1] + "/" + grammar.getPackageName().replace('.', '/');
+        new File(path).mkdirs();
+        return new File(path + "/" + grammar.getClassName() + ".java");
     }
 
     private CharStream getInputStream() throws IOException {

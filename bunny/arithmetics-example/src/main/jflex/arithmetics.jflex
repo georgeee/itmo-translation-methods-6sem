@@ -10,11 +10,11 @@
 /* JFlex example: partial Java language lexer specification */
 
 package ru.georgeee.itmo.sem6.translation.bunny.arithmetics;
-import ru.georgeee.itmo.sem6.translation.bunny.*;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.*;
 %%
 
 %class ALexer
-%implements TokenReader<ASym>
+%implements TokenReader<ASym, ASymbol<?>>
 %unicode
 %line
 %column
@@ -29,7 +29,7 @@ import ru.georgeee.itmo.sem6.translation.bunny.*;
 %function nextToken
 %type ASymbol
 %eofval{
-  /*return symbol(ASym.EOF);*/
+  return null; /*symbol(ASym.EOF);*/
 %eofval}
 %eofclose
 

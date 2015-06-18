@@ -5,12 +5,12 @@ import lombok.Getter;
 /**
  * Created by georgeee on 11.05.15.
  */
-public class BinaryOp implements Expression {
-    private final Expression a;
-    private final Expression b;
+public class BinaryOp implements Expr {
+    private final Expr a;
+    private final Expr b;
     private final Type type;
 
-    public BinaryOp(Expression a, Expression b, Type type) {
+    public BinaryOp(Expr a, Expr b, Type type) {
         this.a = a;
         this.b = b;
         this.type = type;

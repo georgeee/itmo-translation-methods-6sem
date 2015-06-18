@@ -1,0 +1,9 @@
+%class Dummy
+%package ru.georgeee.itmo.sem6.translation.bunny.test
+%enum DummyToken
+%token DummyToken
+%start S
+S -> N;
+N -> V @assign E | E;
+E -> V;
+V -> @x | @asterix E;

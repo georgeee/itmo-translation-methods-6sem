@@ -3,17 +3,26 @@ package ru.georgeee.itmo.sem6.translation.bunny.grammar;
 import lombok.Getter;
 import lombok.Setter;
 import ru.georgeee.itmo.sem6.translation.bunny.processing.SetsComputer;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.GrammarResolver;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiFunction;
 
-public class Grammar implements Iterable<Production> {
+public class Grammar implements Iterable<Production>, GrammarResolver {
     private final Map<String, Terminal> terminalMap = new HashMap<>();
     private final Map<String, Nonterminal> nonterminalMap = new HashMap<>();
     private final List<Production> productions = new ArrayList<>();
     @Getter
     private Nonterminal start;
+    @Getter
+    private Nonterminal pseudoStart;
+    @Getter
+    @Setter
+    private String tokenType;
+    @Getter
+    @Setter
+    private String enumType;
     @Getter
     @Setter
     private String packageName;
@@ -30,12 +39,16 @@ public class Grammar implements Iterable<Production> {
     @Getter
     private final List<Node> nodes = new ArrayList<>();
 
+    public Grammar() {
+        this.start = getOrCreateNonterminal("<start>");
+    }
+
     public void addHeaderCodeBlock(String block) {
         headerCodeBlock = headerCodeBlock == null ? block : headerCodeBlock + block;
     }
 
-    public void setStart(String start) {
-        this.start = getOrCreateNonterminal(start);
+    public void bindStart(String id) {
+        start.addProduction(Arrays.asList(new AliasedNode(pseudoStart = getOrCreateNonterminal(id), null)), "");
     }
 
     private <N extends Node> N getOrCreateNode(String id, Map<String, N> map, List<N> list, BiFunction<Integer, Integer, N> factory) {
@@ -87,9 +100,6 @@ public class Grammar implements Iterable<Production> {
     Production createProduction(Nonterminal nonterminal, List<AliasedNode> aliasedNodes, String codeBlock) {
         Production production = new Production(nonterminal, productions.size(), aliasedNodes, codeBlock);
         productions.add(production);
-        if (start == null) {
-            start = nonterminal;
-        }
         return production;
     }
 
@@ -98,5 +108,22 @@ public class Grammar implements Iterable<Production> {
         for (Production production : this) {
             production.print(out);
         }
+    }
+
+    @Override
+    public int getTerminalIndex(String name) {
+        Terminal terminal = terminalMap.get(name);
+        if (terminal == null) return -1;
+        return terminal.getTermId();
+    }
+
+    @Override
+    public int getProductionSize(int productionId) {
+        return productions.get(productionId).size();
+    }
+
+    @Override
+    public int getLeftNonTermId(int productionId) {
+        return productions.get(productionId).getParent().getNontermId();
     }
 }
