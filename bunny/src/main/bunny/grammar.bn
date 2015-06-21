@@ -1,0 +1,53 @@
+%class GrammarParser
+%start grammarDef
+%token PSymbol<?>
+%enum PSym
+%package ru.georgeee.itmo.sem6.translation.bunny.parser
+
+%header %{
+import static ru.georgeee.itmo.sem6.translation.bunny.parser.ParserHelper.*;
+import org.apache.commons.lang3.tuple.*;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
+import java.util.Collections;
+}%
+
+grammarDef [Grammar v] -> g:grammarDef p:packageDef %{ $v = %g.v; %g.v.setPackageName(%p.v); }%
+                               | g:grammarDef c:classDef %{ $v = %g.v; %g.v.setClassName(%c.v); }%
+                               | g:grammarDef s:startDef %{ $v = %g.v; %g.v.bindStart(%s.v); }%
+                               | g:grammarDef h:headerDef %{ $v = %g.v; %g.v.addHeaderCodeBlock(%h.v); }%
+                               | g:grammarDef r:ruleDef %{ $v = %g.v; addRule(%g.v, %r.v); }%
+                               | g:grammarDef e:enumTypeDef %{ $v = %g.v; %g.v.setEnumType(%e.v); }%
+                               | g:grammarDef t:tokenTypeDef %{ $v = %g.v; %g.v.setTokenType(%t.v); }%
+                               | %{$v = new Grammar();}% ;
+
+dotSeparatedId [String v]-> id:@Id %{$v = @id.getText();}% | id:@DotSeparatedId %{$v = @id.getText();}%;
+
+packageDef [String v] -> @Package dotSeparatedId ;
+classDef [String v]-> @Class id:@Id %{ $v = @id.getText(); }%;
+startDef [String v]-> @Start id:@Id %{ $v = @id.getText(); }%;
+enumTypeDef [String v]-> @EnumType id:dotSeparatedId ;
+tokenTypeDef [String v]-> @TokenType id:javaType ;
+headerDef [String v]-> @Header c:@CodeBlock %{ $v = @c.getText(); }%;
+ruleDef [PreRule v]-> id:@Id al:attrList @Impl ps:productions @Semicolon %{ $v = new PreRule(@id.getText(), %al.v, %ps.v); }%;
+productions [List<PreProduction> v]-> p:production %{ $v = new ArrayList<>(); $v.add(%p.v); }%
+                                           | ps:productions @Or p:production %{ $v = %ps.v; $v.add(%p.v); }%;
+production [PreProduction v]-> ms:productionMembers c:optCodeBlock %{ $v = new PreProduction(%ms.v, %c.v); }%;
+productionMembers [List<PreProduction.Member> v]-> %{$v = new ArrayList<>();}%
+                                                        | pms:productionMembers pm:productionMember %{$v = %pms.v; $v.add(%pm.v);}%;
+productionMember [PreProduction.Member v]-> t:productionMemberId %{ $v = new PreProduction.Member(%t.v, null, %t.type); }%
+                                                 | a:@Id @Colon t:productionMemberId %{ $v = new PreProduction.Member(%t.v, @a.getText(), %t.type); }%;
+productionMemberId [String v, boolean type]-> id:@TerminalId %{$v=@id.getText(); $type = true;}%
+                                                   | id:@Id %{$v=@id.getText(); $type = false;}%;
+optCodeBlock [String v]-> cb:@CodeBlock %{$v = @cb.getText(); }% | %{$v = null;}%;
+
+attrList [List<Attr> v]-> @OSqBracket attrList_ @CSqBracket
+                                               | @OSqBracket @CSqBracket %{$v = Collections.emptyList();}%
+                                               | %{$v = Collections.emptyList();}%;
+attrList_ [List<Attr> v]-> attr %{$v = new ArrayList<>(); $v.add(%attr.v);}%
+                                               | as:attrList_ @Comma attr %{$v = %as.v; $v.add(%attr.v);}%;
+
+attr [Attr v]-> t:javaType id:@Id %{$v = new Attr(%t.v, @id.getText());}%;
+javaType [String v]-> id:dotSeparatedId %{ $v = %id.v; }%| id:dotSeparatedId @LAngle args:javaTypeArgs @RAngle %{ $v = %id.v + "<" + %args.v + ">"; }%
+            | id:dotSeparatedId @LAngle @Quest @RAngle %{ $v = %id.v + "<?>"; }%;
+javaTypeArgs [String v]-> javaType | ts:javaTypeArgs @Comma t:javaType %{$v = %ts.v + ", " + %t.v;}%;
+

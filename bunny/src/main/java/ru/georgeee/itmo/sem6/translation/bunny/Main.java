@@ -1,21 +1,19 @@
 package ru.georgeee.itmo.sem6.translation.bunny;
 
-import org.antlr.v4.runtime.ANTLRFileStream;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
+import org.apache.commons.lang.exception.NestableRuntimeException;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
-import ru.georgeee.itmo.sem6.translation.bunny.parser.GrammarLexer;
 import ru.georgeee.itmo.sem6.translation.bunny.parser.GrammarParser;
+import ru.georgeee.itmo.sem6.translation.bunny.parser.ParserUtil;
 import ru.georgeee.itmo.sem6.translation.bunny.processing.FirstFollow;
 import ru.georgeee.itmo.sem6.translation.bunny.processing.Processor;
 import ru.georgeee.itmo.sem6.translation.bunny.runtime.Generator;
+import ru.georgeee.itmo.sem6.translation.bunny.runtime.ParseException;
 import ru.georgeee.itmo.sem6.translation.bunny.runtime.TableHolder;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -73,7 +71,11 @@ public class Main {
                         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                             String fileName = file.getFileName().toString();
                             if (fileName.endsWith(BUNNY_EXTENSION)) {
-                                run(file);
+                                try {
+                                    run(file);
+                                } catch (ParseException e) {
+                                    throw new NestableRuntimeException(e);
+                                }
                             }
                             return FileVisitResult.CONTINUE;
                         }
@@ -84,17 +86,17 @@ public class Main {
             }
         } catch (IOException e) {
             System.err.println("I/O error: " + e);
-        } catch (RecognitionException e) {
+        } catch (ParseException e) {
             System.err.println("Compilation error: " + e);
         }
     }
 
-    public void run(Path file) throws IOException {
-        run(getParser(getInputStream(file)));
+    public void run(Path file) throws IOException, ParseException {
+        run(ParserUtil.createParser(getInputStream(file)));
     }
 
-    public void run(GrammarParser parser) throws IOException {
-        Grammar grammar = parser.grammarDef().v;
+    public void run(GrammarParser parser) throws IOException, ParseException {
+        Grammar grammar = parser.parse().v;
         if (print) {
             printGrammar(grammar);
         }
@@ -136,14 +138,9 @@ public class Main {
         return path;
     }
 
-    private CharStream getInputStream(Path inputPath) throws IOException {
-        return new ANTLRFileStream(inputPath.toString());
+    private InputStream getInputStream(Path inputPath) throws IOException {
+        return Files.newInputStream(inputPath);
     }
 
-    public GrammarParser getParser(CharStream input) {
-        GrammarLexer lexer = new GrammarLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        return new GrammarParser(tokens);
-    }
 }
 

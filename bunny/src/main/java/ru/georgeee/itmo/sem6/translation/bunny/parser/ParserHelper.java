@@ -1,6 +1,9 @@
 package ru.georgeee.itmo.sem6.translation.bunny.parser;
 
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.AliasedNode;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.Nonterminal;
 
 import java.util.ArrayList;
 import java.util.List;
