@@ -1,6 +1,9 @@
 package ru.georgeee.itmo.sem6.translation.bunny.runtime;
 
-public class TableHolder {
+import java.io.Serializable;
+
+public class TableHolder implements Serializable{
+    private static final long serialVersionUID = -8213316307704510988L;
     final int[][] action;
     final Action[][] actionType;
     final int[][] goTo;
