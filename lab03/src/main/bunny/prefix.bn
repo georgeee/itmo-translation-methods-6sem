@@ -1,0 +1,130 @@
+%class PrefixParser
+%start program
+%token PSymbol<?>
+%enum PSym
+%package ru.georgeee.itmo.sem6.translation.lab03
+
+%header %{
+import ru.georgeee.itmo.sem6.translation.lab03.ast.*;
+import ru.georgeee.itmo.sem6.translation.lab03.ast.expr.*;
+import ru.georgeee.itmo.sem6.translation.lab03.ast.expr.op.*;
+import ru.georgeee.itmo.sem6.translation.lab03.ast.stmt.*;
+}%
+
+assignArithExpr [AssignArithOp v] -> @AssignOp arithId arithExpr
+         %{ $v = new AssignArithOp(%arithId.v, %arithExpr.v); }%;
+assignBoolExpr [AssignLogOp v] -> @AssignOp boolId boolExpr
+         %{ $v = new AssignLogOp(%boolId.v, %boolExpr.v); }%;
+
+arithId [IntVar v] -> @ArithId %{ $v = new IntVar(@ArithId.getText()); }%;
+boolId [BoolVar v] -> @BoolId %{ $v = new BoolVar(@BoolId.getText()); }%;
+intLit [IntLiteral v] -> @Int %{ $v = new IntLiteral(@Int.getInt()); }%;
+boolLit [BoolLiteral v] -> @Bool %{ $v = new BoolLiteral(Boolean.parseBoolean(@Bool.getText())); }%;
+uArithOp [UnaryArithOp v] -> @UArithOp arithExpr
+         %{ UnaryArithOp.Type type;
+           switch(@UArithOp.getText()){
+             case "neg" : type = UnaryArithOp.Type.NEG; break;
+             default : throw new AssertionError();
+           }
+           $v = new UnaryArithOp(%arithExpr.v, type);
+         }%;
+bArithOp [BinaryArithOp v] -> @BArithOp a:arithExpr b:arithExpr
+         %{ BinaryArithOp.Type type;
+           switch(@BArithOp.getText()){
+             case "+" : type = BinaryArithOp.Type.ADD; break;
+             case "-" : type = BinaryArithOp.Type.SUB; break;
+             case "*" : type = BinaryArithOp.Type.MUL; break;
+             case "/" : type = BinaryArithOp.Type.DIV; break;
+             case "%" : type = BinaryArithOp.Type.MOD; break;
+             default  : throw new AssertionError();
+           }
+           $v = new BinaryArithOp(%a.v, %b.v, type);
+         }%;
+
+ternaryArithOp [TernaryArithOp v] -> @TernaryOp boolExpr a:arithExpr b:arithExpr
+        %{ $v = new TernaryArithOp(%boolExpr.v, %a.v, %b.v); }%;
+bArithCondOp [BinaryArithCondOp v] -> @BArithCondOp a:arithExpr b:arithExpr
+         %{ BinaryArithCondOp.Type type;
+           switch(@BArithCondOp.getText()){
+             case ">"  :  type = BinaryArithCondOp.Type.GT; break;
+             case "<"  :  type = BinaryArithCondOp.Type.LT; break;
+             case ">=" :  type = BinaryArithCondOp.Type.GTE; break;
+             case "<=" :  type = BinaryArithCondOp.Type.LTE; break;
+             default   :  throw new AssertionError();
+           }
+           $v = new BinaryArithCondOp(%a.v, %b.v, type);
+         }%;
+eqArithCondOp [EqualityCondOp<ArithExpr> v] -> @EqCondOp a:arithExpr b:arithExpr
+         %{ EqualityCondOp.Type type;
+           switch(@EqCondOp.getText()){
+             case "==" : type = EqualityCondOp.Type.EQ; break;
+             case "!=" : type = EqualityCondOp.Type.NEQ; break;
+             default   : throw new AssertionError();
+           }
+           $v = new EqualityCondOp<ArithExpr>(%a.v, %b.v, type);
+         }%;
+eqLogCondOp [EqualityCondOp<BoolExpr> v] -> @EqCondOp a:boolExpr b:boolExpr
+         %{ EqualityCondOp.Type type;
+           switch(@EqCondOp.getText()){
+             case "==" : type = EqualityCondOp.Type.EQ; break;
+             case "!=" : type = EqualityCondOp.Type.NEQ; break;
+             default   : throw new AssertionError();
+           }
+           $v = new EqualityCondOp<BoolExpr>(%a.v, %b.v, type);
+         }%;
+ternaryLogOp [TernaryLogOp v] -> @TernaryOp a:boolExpr b:boolExpr c:boolExpr
+        %{ $v = new TernaryLogOp(%a.v, %b.v, %c.v); }%;
+
+uLogOp [UnaryLogOp v] -> @ULogOp boolExpr
+         %{ UnaryLogOp.Type type;
+           switch(@ULogOp.getText()){
+             case "!" : type = UnaryLogOp.Type.NOT; break;
+             default : throw new AssertionError();
+           }
+           $v = new UnaryLogOp(%boolExpr.v, type);
+         }%;
+bLogOp [BinaryLogOp v] -> @BLogOp a:boolExpr b:boolExpr
+         %{ BinaryLogOp.Type type;
+           switch(@BLogOp.getText()){
+             case "&&" : type = BinaryLogOp.Type.AND; break;
+             case "||" : type = BinaryLogOp.Type.OR; break;
+             default : throw new AssertionError();
+           }
+           $v = new BinaryLogOp(%a.v, %b.v, type);
+         }%;
+
+
+arithExpr [ArithExpr v] -> arithId | intLit | bArithOp | uArithOp | ternaryArithOp | assignArithExpr ;
+
+boolExpr [BoolExpr v] -> boolId | boolLit | bArithCondOp | eqArithCondOp | eqLogCondOp | bLogOp
+                         | uLogOp | ternaryLogOp | assignBoolExpr ;
+
+expr [Expr v] ->  arithExpr | boolExpr ;
+
+read [ReadStmt v] -> @Read boolId %{ $v = new ReadStmt(%boolId.v); }% | @Read arithId %{ $v = new ReadStmt(%arithId.v); }%;
+print [PrintStmt v] -> @Print arithExpr %{$v = new PrintStmt(%arithExpr.v); }% | @Print boolExpr %{$v = new PrintStmt(%boolExpr.v); }%;
+condIf [ConditionStmt v] -> @If boolExpr a:stmt %{ $v = new ConditionStmt(%boolExpr.v, %a.v, null); }%;
+condIfElse [ConditionStmt v] -> @IfElse boolExpr a:stmt b:stmt %{ $v = new ConditionStmt(%boolExpr.v, %a.v, %b.v); }%;
+var [VarStmt v] -> @Var boolId %{ $v = new VarStmt(%boolId.v); }% | @Var arithId %{ $v = new VarStmt(%arithId.v); }%;
+loop [LoopStmt v] -> @Loop boolExpr stmt %{ $v = new LoopStmt(%boolExpr.v, %stmt.v); }%;
+compound [CompoundStmt v] -> @Semicolon a:stmt b:stmt
+          %{
+            Stmt left = %a.v;
+            Stmt right = %b.v;
+            if(left instanceof CompoundStmt){
+              ((CompoundStmt)left).add(right);
+              $v = ((CompoundStmt)left);
+            }else{
+              $v = new CompoundStmt(left, right);
+            }
+          }%;
+context [CtxStmt v] -> @CtxShifter stmt %{ $v = new CtxStmt(%stmt.v); }%;
+
+stmt [Stmt v] ->   loop | read | print | condIf | condIfElse | var | compound | context
+       | assignArithExpr %{ $v = new ExprStmt(%assignArithExpr.v); }%
+       | assignBoolExpr %{ $v = new ExprStmt(%assignBoolExpr.v); }%;
+
+
+program [CompoundStmt v] -> program stmt %{ $v = %program.v; $v.add(%stmt.v); }%
+                            | stmt %{ $v = new CompoundStmt(); $v.add(%stmt.v); }%;
+
