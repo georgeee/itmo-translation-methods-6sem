@@ -105,7 +105,7 @@ public class Main {
         }
         TableHolder tables = processor.createTableHolder();
         Generator generator = new Generator(grammar, tables);
-        generator.generate(getOutStream(grammar));
+        generator.generate(getOutPath(grammar));
     }
 
     private void printGrammar(Grammar grammar) throws IOException {
@@ -129,14 +129,11 @@ public class Main {
         }
     }
 
-    private PrintStream getOutStream(Grammar grammar) throws IOException {
-        return new PrintStream(Files.newOutputStream(getOutPath(grammar)));
-    }
 
     private Path getOutPath(Grammar grammar) throws IOException {
         Path path = outputDir.resolve(grammar.getPackageName().replace('.', '/'));
         Files.createDirectories(path);
-        return path.resolve(grammar.getClassName() + ".java");
+        return path;
     }
 
     private CharStream getInputStream(Path inputPath) throws IOException {

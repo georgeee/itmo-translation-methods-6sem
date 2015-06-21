@@ -4,7 +4,11 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -18,7 +22,25 @@ public class Generator {
         this.tableHolder = tableHolder;
     }
 
-    public void generate(PrintStream out) {
+    private PrintStream getOutStream(Path path) throws IOException {
+        return new PrintStream(Files.newOutputStream(path));
+    }
+
+    public void generate(Path parentDir) throws IOException {
+        try (PrintStream out = getOutStream(parentDir.resolve(grammar.getClassName() + ".java"))) {
+            generateHeader(out);
+            try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(parentDir.resolve(getTHSerFileName())))) {
+                generateTableHolder(out, oos);
+            }
+            generateVars(out);
+            generateConstructor(out);
+            generateMethods(out);
+            generateContexts(out);
+            generateFooter(out);
+        }
+    }
+
+    private void generateHeader(PrintStream out) {
         out.append("package ").append(grammar.getPackageName()).println(';');
         out.println(str(grammar.getHeaderCodeBlock()));
         out.println("import ru.georgeee.itmo.sem6.translation.bunny.runtime.*;");
@@ -26,10 +48,9 @@ public class Generator {
         out.println("import java.util.*;");
         out.println("import java.io.IOException;");
         out.format("public class %s extends Parser<%s, %s> {%n", grammar.getClassName(), grammar.getEnumType(), grammar.getTokenType());
-        generateVars(out);
-        generateConstructor(out);
-        generateMethods(out);
-        generateContexts(out);
+    }
+
+    private void generateFooter(PrintStream out) {
         out.println('}');
     }
 
@@ -48,10 +69,47 @@ public class Generator {
         out.println("}");
     }
 
+    private static final int OUTPUT_CALLBACK_B = 8;
+    private static final int BOTTOM_SIZE = 4;
+
     private void generateOutputCallback(PrintStream out) {
-        out.println("protected void outputCallback(int productionId){");
-        out.println("switch(productionId){");
-        for (Production production : grammar) {
+        out.printf("protected void outputCallback(int productionId){%n");
+        out.printf("outputCallback_%d_%d(productionId);%n", 0, grammar.size());
+        out.println("}");
+        generateOutputCallback(out, 0, grammar.size());
+    }
+
+    private void generateOutputCallback(PrintStream out, int l, int r) {
+        out.printf("protected void outputCallback_%d_%d(int i){%n", l, r);
+        int size = r - l;
+        if (size <= BOTTOM_SIZE) {
+            generateOutputCallbackBody(out, l, r);
+            out.println("}");
+        } else {
+            int step = size / OUTPUT_CALLBACK_B;
+            if (size <= OUTPUT_CALLBACK_B) {
+                step = BOTTOM_SIZE;
+            }
+            for (int i = l; i < r; i += step) {
+                int _r = Math.min(i + step, r);
+                if (i > l) out.printf(" else ");
+                if (i + step < r) {
+                    out.printf("if(i < %d)", _r);
+                }
+                out.printf("{%n outputCallback_%d_%d(i);%n}", i, _r);
+            }
+            out.printf("%n}%n");
+            for (int i = l; i < r; i += step) {
+                int _r = Math.min(i + step, r);
+                generateOutputCallback(out, i, _r);
+            }
+        }
+    }
+
+    private void generateOutputCallbackBody(PrintStream out, int l, int r) {
+        out.println("switch(i){");
+        for (int j = l; j < r; ++j) {
+            Production production = grammar.get(j);
             if (production.getParent().equals(grammar.getStart())) {
                 continue;
             }
@@ -70,9 +128,9 @@ public class Generator {
             out.printf(");%n stack.push(ctx);%n}%nbreak;%n");
         }
         out.println("}");
-        out.println("}");
     }
-    private void generateTokenRead(PrintStream out){
+
+    private void generateTokenRead(PrintStream out) {
         out.printf("protected void tokenReadCallback(%s token){%n", grammar.getTokenType());
         out.println("stack.push(token);");
         out.println("}");
@@ -158,9 +216,7 @@ public class Generator {
     private void generateConstructor(PrintStream out) {
         //        public Parser(TableHolder tables, TokenReader<E, T> reader, GrammarResolver grammar, Class<E> clazz) {
         out.format("public %s (TokenReader<%s, %s> reader){%n", grammar.getClassName(), grammar.getEnumType(), grammar.getTokenType());
-        out.print("super(");
-        generateTableHolder(out);
-        out.format(",%n reader,%n ");
+        out.print("super(loadTableHolder(), reader, ");
         generateGrammar(out);
         out.format(", %n %s.class);", grammar.getEnumType());
         out.println('}');
@@ -201,14 +257,20 @@ public class Generator {
         return res;
     }
 
-    private void generateTableHolder(PrintStream out) {
-        out.print("new TableHolder(");
-        generateIntArray2(tableHolder.action, out);
-        out.println(",");
-        generateActionArray2(tableHolder.actionType, out);
-        out.println(",");
-        generateIntArray2(tableHolder.goTo, out);
-        out.print(")");
+    private String getTHSerFileName() {
+        return grammar.getClassName() + "-tables.ser";
+    }
+
+    private void generateTableHolder(PrintStream out, ObjectOutputStream oos) throws IOException {
+        String serFileName = getTHSerFileName();
+        out.printf("private static TableHolder loadTableHolder() {%n" +
+                "try{%n" +
+                " java.io.ObjectInputStream os = new java.io.ObjectInputStream(%s.class.getResourceAsStream(\"%s\"));%n" +
+                " return (TableHolder) os.readObject();%n" +
+                " } catch (java.io.IOException | ClassNotFoundException e) {%n" +
+                " throw new RuntimeException(e);%n" +
+                " }%n}%n", grammar.getClassName(), serFileName);
+        oos.writeObject(tableHolder);
     }
 
     private void generateStringArray(String[] array, PrintStream out) {
