@@ -1,5 +1,5 @@
 %class AParser
-%start Expr
+%start Level0
 %token ASymbol<?>
 %enum ASym
 %package ru.georgeee.itmo.sem6.translation.bunny.arithmetics
@@ -8,11 +8,11 @@ import ru.georgeee.itmo.sem6.translation.bunny.arithmetics.expr.*;
 import ru.georgeee.itmo.sem6.translation.bunny.*;
 }%
 
-Expr [Expr v] -> @Num %{ $v = new Value(((ASymbol<Integer>)@Num).getValue()); }%
-                     | @OBracket Level0 @CBracket ;
 Level0 [Expr v] -> uop:UOp0 o:Level1 %{ $v = %uop.v == null ? %o.v : new UnaryOp(%o.v, %uop.v); }%
                     | l:Level0 bop:BOp0 r:Level1 %{ $v = new BinaryOp(%l.v, %r.v, %bop.v); }% ;
 Level1 [Expr v] -> Expr | l:Level1 bop:BOp1 r:Expr %{ $v = new BinaryOp(%l.v, %r.v, %bop.v); }% ;
+Expr [Expr v] -> @Num %{ $v = new Value(((ASymbol<Integer>)@Num).getValue()); }%
+                     | @OBracket Level0 @CBracket ;
 
 BOp0 [BinaryOp.Type v] -> @Plus %{ $v = BinaryOp.Type.ADD; }% | @Minus %{ $v = BinaryOp.Type.SUB; }%;
 BOp1 [BinaryOp.Type v] -> @Mul %{ $v = BinaryOp.Type.MUL; }% | @Div %{ $v = BinaryOp.Type.DIV; }%;

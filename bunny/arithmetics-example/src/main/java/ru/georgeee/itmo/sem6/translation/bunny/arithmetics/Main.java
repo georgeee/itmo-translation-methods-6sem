@@ -10,19 +10,24 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class Main {
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws IOException {
         InputStream is = getInputStream(args);
         TokenReader<ASym, ASymbol<?>> lexer = new ALexer(is);
-//        Token<ASym> symbol = null;
-//        do {
-//            if (symbol != null) {
-//                System.out.println(symbol);
-//            }
-//            symbol = lexer.nextToken();
-//        } while (!(symbol == null /*|| symbol.getType() == ASym.EOF*/));
         AParser parser = new AParser(lexer);
-        Expr expr = parser.parse().v;
-        System.out.println(expr);
+        Expr expr;
+        do {
+            try {
+                AParser.CtxLevel0 ctxLevel0 = parser.parse();
+                if (ctxLevel0 == null) {
+                    break;
+                }
+                expr = ctxLevel0.v;
+                System.out.println(expr);
+            } catch (ParseException e) {
+                System.err.println("Parse error: " + e.getMessage());
+            }
+        }
+        while (true);
     }
 
     private static InputStream getInputStream(String[] args) throws FileNotFoundException {

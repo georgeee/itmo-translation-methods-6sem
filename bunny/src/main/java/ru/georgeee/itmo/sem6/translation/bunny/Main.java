@@ -51,7 +51,7 @@ public class Main {
         System.out.append("=============== Extended grammar ================\n");
         processor.printExtendedGrammar(System.out);
         try (BufferedWriter csvOut = Files.newBufferedWriter(Paths.get("action-goto.csv"))) {
-            processor.printActionGotoTables(csvOut);
+            processor.printActionGotoTablesCsv(csvOut);
         }
         TableHolder tables = processor.createTableHolder();
         Generator generator = new Generator(grammar, tables);

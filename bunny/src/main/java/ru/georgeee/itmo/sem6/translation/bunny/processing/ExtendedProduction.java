@@ -45,10 +45,13 @@ class ExtendedProduction implements IProduction<ExtendedNode> {
         for (ExtendedNode node : nodes) {
             out.append(node.toString()).append(' ');
         }
-        out.append('\n');
+        out.append(" : ").append(String.valueOf(production.getTerminal())).append('\n');
     }
 
     public ItemSet getFinalSet() {
+        if(isEmpty()){
+            return parent.getFrom();
+        }
         return nodes.get(size() - 1).getTo();
     }
 

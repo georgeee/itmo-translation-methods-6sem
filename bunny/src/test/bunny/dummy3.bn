@@ -1,0 +1,27 @@
+%class Dummy3Parser
+%package ru.georgeee.itmo.sem6.translation.bunny.test
+%enum Dummy3Token
+%token Dummy3Token
+%start L0
+
+/*
+E -> @num | ;
+*/
+
+/*
+E -> U @num;
+U -> @minus | ;
+*/
+
+/*
+E -> E BOp @num | UOp @num;
+BOp -> @plus | @minus;
+UOp -> @minus |  ;
+  */
+
+L0 -> UOp L1 | L0 BOp0 L1;
+L1 -> E | L1 BOp1 E;
+E -> @num | @obr L0 @cbr;
+BOp0 -> @plus | @minus;
+BOp1 -> @mul | @div;
+UOp -> @minus |  ;

@@ -30,10 +30,9 @@ class ExtendedNode implements Node {
     }
 
     public String toString() {
-        return "<" + from.getId()
-                + ", " + node.toString()
-                + ", " + (to == null ? null : to.getId())
-                + '>';
+        return from.getId()
+                + "-" + node.toString()
+                + "-" + (to == null ? null : to.getId());
     }
 
     @Override

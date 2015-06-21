@@ -27,11 +27,7 @@ public class ASymbol<T> implements Token<ASym> {
 
     @Override
     public String toString() {
-        return "Symbol{" +
-                "type=" + type +
-                ", yyline=" + line +
-                ", yycolumn=" + column +
-                '}';
+        return "{" + type + " : " + value + '}';
     }
 
     @Override

@@ -74,25 +74,18 @@ class ItemSet implements Iterable<IndexedProduction> {
     public void completeToClosure() {
         Queue<IndexedProduction> queue = new ArrayDeque<>();
         queue.addAll(items);
-//        log.debug("complete to closure: {}", getItems());
-//        log.debug("init queue: {}", queue);
-        Set<IndexedProduction> used = new HashSet<>();
         while (!queue.isEmpty()) {
             IndexedProduction iP = queue.remove();
-//            log.debug("Took from queue: {}, {}", iP, iP.hasNext());
             if (iP.hasNext()) {
                 Node first = iP.get(iP.getIndex()).unwrap();
                 if (first instanceof Nonterminal) {
-//                    log.debug("for production {}", iP);
                     for (Production synProduction : (Nonterminal) first) {
                         for (Terminal terminal : getFirstSet(iP)) {
                             IndexedProduction synIP = new IndexedProduction(synProduction, 0, terminal);
-                            if(!used.contains(synIP)){
-                                used.add(synIP);
+                            if (!items.contains(synIP)) {
                                 add(synIP);
                                 queue.add(synIP);
                             }
-//                            log.debug("generating production: {}", synIP);
                         }
                     }
                 }

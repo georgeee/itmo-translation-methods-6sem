@@ -35,7 +35,7 @@ import ru.georgeee.itmo.sem6.translation.bunny.runtime.*;
 
 LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
-WhiteSpace     = {LineTerminator} | [ \t\f]
+WhiteSpace     = [ \t\f]
 
 /* comments */
 Comment = {TraditionalComment} | {EndOfLineComment} | {DocumentationComment}
@@ -71,6 +71,7 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 
   /* whitespace */
   {WhiteSpace}                   { /* ignore */ }
+  {LineTerminator}               { return null; }
 }
 
 

@@ -1,0 +1,8 @@
+%class Dummy2Parser
+%package ru.georgeee.itmo.sem6.translation.bunny.test
+%enum Dummy2Token
+%token Dummy2Token
+%start S
+
+S -> C C;
+C -> @c C | @d;

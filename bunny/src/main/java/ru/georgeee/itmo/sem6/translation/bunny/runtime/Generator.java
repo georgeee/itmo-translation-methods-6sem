@@ -43,18 +43,19 @@ public class Generator {
         Nonterminal pseusoStart = grammar.getPseudoStart();
         String className = getCtxClassName(pseusoStart.getId());
         out.printf("public %s parse() throws ParseException, IOException{%n", className);
-        out.println("doParse();");
+        out.println("if(!doParse()) return null;");
         out.printf("return (%s) stack.pop();%n", className);
         out.println("}");
     }
 
     private void generateOutputCallback(PrintStream out) {
         out.println("protected void outputCallback(int productionId){");
+        out.println("switch(productionId){");
         for (Production production : grammar) {
             if (production.getParent().equals(grammar.getStart())) {
                 continue;
             }
-            out.printf("if(productionId == %d){%n", production.getId());
+            out.printf("case %d:{%n", production.getId());
             String className = getCtxClassName(production.getParent().getId());
             for (int i = 0; i < production.size(); ++i) {
                 out.printf("Object v%d = stack.pop();%n", production.size() - 1 - i);
@@ -66,10 +67,9 @@ public class Generator {
                 }
                 out.printf("(%s) v%d", getTypeName(production.get(i)), i);
             }
-            out.println(");");
-            out.println("stack.push(ctx);");
-            out.println("}");
+            out.printf(");%n stack.push(ctx);%n}%nbreak;%n");
         }
+        out.println("}");
         out.println("}");
     }
     private void generateTokenRead(PrintStream out){

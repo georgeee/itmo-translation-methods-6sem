@@ -2,10 +2,7 @@ package ru.georgeee.itmo.sem6.translation.bunny.processing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Grammar;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Node;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Nonterminal;
-import ru.georgeee.itmo.sem6.translation.bunny.grammar.Terminal;
+import ru.georgeee.itmo.sem6.translation.bunny.grammar.*;
 import ru.georgeee.itmo.sem6.translation.bunny.runtime.Action;
 import ru.georgeee.itmo.sem6.translation.bunny.runtime.TableHolder;
 
@@ -45,9 +42,12 @@ public class Processor {
         for (int i = 0; i < itemsets.size(); ++i) {
             for (Node node : grammar.getNodes()) {
                 ItemSet to = transitionTable[i][node.getNodeId()];
+                if(to == null){
+                    continue;
+                }
                 out.append(String.valueOf(i)).append(" + ")
                         .append(node.toString()).append(" -> ")
-                        .append(String.valueOf(to == null ? null : to.getId()))
+                        .append(String.valueOf(to.getId()))
                         .append(String.valueOf('\n'));
             }
         }
@@ -57,13 +57,13 @@ public class Processor {
         return new TableHolder(actionTable, actionTypeTable, gotoTable);
     }
 
-    public void computeActionGotoTables() {
+    private void computeActionGotoTables() {
         actionTable = new int[itemsets.size()][grammar.getTerminals().size() + 1];
         actionTypeTable = new Action[itemsets.size()][grammar.getTerminals().size() + 1];
         gotoTable = new int[itemsets.size()][grammar.getNonterminals().size()];
         for (int i = 0; i < itemsets.size(); ++i) {
             if (containsFinishingProduction(itemsets.get(i))) {
-                actionTypeTable[i][0] = Action.ACCEPT;
+                setAction(i, 0, Action.ACCEPT, 0);
             }
             for (Node node : grammar.getNodes()) {
                 ItemSet to = transitionTable[i][node.getNodeId()];
@@ -74,9 +74,8 @@ public class Processor {
                 } else {
                     Terminal terminal = (Terminal) node.unwrap();
                     int termId = terminal.getTermId() + 1;
-                    actionTable[i][termId] = toId;
                     if (to != null) {
-                        actionTypeTable[i][termId] = Action.SHIFT;
+                        setAction(i, termId, Action.SHIFT, toId);
                     }
                 }
             }
@@ -90,9 +89,19 @@ public class Processor {
             int productionId = production.getId();
             Terminal terminal = production.getProduction().getTerminal();
             int termId = terminal == null ? 0 : 1 + terminal.getTermId();
-            actionTypeTable[finalSetId][termId] = Action.REDUCE;
-            actionTable[finalSetId][termId] = productionId;
+            setAction(finalSetId, termId, Action.REDUCE, productionId);
         }
+    }
+
+    private void setAction(int finalSetId, int termId, Action action, int productionId) {
+        if (actionTypeTable[finalSetId][termId] != null
+                && !(actionTypeTable[finalSetId][termId] == action && actionTable[finalSetId][termId] == productionId)) {
+            log.warn("Overwriting action {}:{} with {}:{} for setId={} termId={}",
+                    actionTypeTable[finalSetId][termId], actionTable[finalSetId][termId],
+                    action, productionId, finalSetId, termId);
+        }
+        actionTypeTable[finalSetId][termId] = action;
+        actionTable[finalSetId][termId] = productionId;
     }
 
     private boolean containsFinishingProduction(ItemSet itemSet) {
@@ -110,11 +119,9 @@ public class Processor {
         addItemSet(ItemSet.createInitial(grammar.getStart(), firstFollow));
         int i = 0;
         while (i < itemsets.size()) {
-            log.debug("Itemset #{} : {}", i, itemsets.get(i).getItems());
             ItemSet itemSet = itemsets.get(i);
             for (Map.Entry<Node, Set<IndexedProduction>> goEntry : itemSet.getGoMap().entrySet()) {
                 Set<IndexedProduction> productions = goEntry.getValue();
-                log.debug("goEntry {}: {}", goEntry.getKey(), productions);
                 if (productions.isEmpty()) {
                     throw new IllegalArgumentException("Empty productions");
                 } else {
@@ -156,12 +163,9 @@ public class Processor {
 
     private void computeExtendedGrammar() {
         for (ItemSet from : itemsets) {
-            for (Map.Entry<Node, Set<IndexedProduction>> goEntry : from.getGoMap().entrySet()) {
-                Set<IndexedProduction> productions = goEntry.getValue();
-                for (IndexedProduction iP : productions) {
-                    if (iP.getIndex() == 0) {
-                        extendedGrammar.add(createExtendedProduction(from, iP));
-                    }
+            for (IndexedProduction iP : from) {
+                if (iP.getIndex() == 0) {
+                    extendedGrammar.add(createExtendedProduction(from, iP));
                 }
             }
         }
@@ -192,7 +196,7 @@ public class Processor {
             itemsetMap.put(itemSet, itemSet);
             itemsets.add(itemSet);
         } else {
-            log.info("Rejecting {}", itemSet.getItems());
+            log.debug("Rejecting {}", itemSet.getItems());
         }
     }
 
@@ -211,7 +215,7 @@ public class Processor {
 //        extFirstFollow.print(out);
     }
 
-    public void printActionGotoTables(Appendable out) throws IOException {
+    public void printActionGotoTablesCsv(Appendable out) throws IOException {
         String tableDelim = ";";
         out.append("Set").append(tableDelim).append("$").append(tableDelim);
         for (Node node : grammar.getTerminals()) {
@@ -227,7 +231,7 @@ public class Processor {
                 if (actionTypeTable[i][j] != null) {
                     switch (actionTypeTable[i][j]) {
                         case REDUCE:
-                            out.append("r(").append(grammar.get(actionTable[i][j]).toString()).append(")");
+                            out.append("r").append(String.valueOf(actionTable[i][j])).append(")");
                             break;
                         case SHIFT:
                             out.append("s").append(String.valueOf(actionTable[i][j]));
@@ -245,7 +249,10 @@ public class Processor {
             }
             out.append('\n');
         }
-
+        out.append("\nRules list:\n");
+        for (Production production : grammar) {
+            out.append(String.valueOf(production.getId())).append(tableDelim).append(production.toString()).append('\n');
+        }
     }
 
 }

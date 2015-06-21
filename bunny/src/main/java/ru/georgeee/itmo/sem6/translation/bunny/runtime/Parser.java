@@ -23,10 +23,13 @@ public abstract class Parser<E extends Enum<E>, T extends Token<E>> {
         this.tokenMapping = new EnumMap<>(clazz);
     }
 
-    protected void doParse() throws ParseException, IOException {
+    protected boolean doParse() throws ParseException, IOException {
         Deque<Integer> stack = new ArrayDeque<>();
         stack.push(0);
         T token = reader.nextToken();
+        if(token == null){
+            return false;
+        }
         log.debug("Init: read {}", token);
         while (true){
             int currentState = stack.getFirst();
@@ -40,7 +43,7 @@ public abstract class Parser<E extends Enum<E>, T extends Token<E>> {
             log.debug("current: {} {}", action, id);
             switch (action) {
                 case REDUCE:
-                    log.info("Production matched : {}", id);
+                    log.debug("Production matched : {}", id);
                     outputCallback(id);
                     int leftId = grammar.getLeftNonTermId(id);
                     for (int i = 0; i < grammar.getProductionSize(id); ++i) {
@@ -63,8 +66,8 @@ public abstract class Parser<E extends Enum<E>, T extends Token<E>> {
                     log.debug("pushed {}", id);
                     break;
                 case ACCEPT:
-                    log.info("accepted");
-                    return;
+                    log.debug("accepted");
+                    return true;
             }
         }
     }
