@@ -69,8 +69,7 @@ public class Generator {
         out.println("}");
     }
 
-    private static final int OUTPUT_CALLBACK_B = 8;
-    private static final int BOTTOM_SIZE = 4;
+    private static final int OUTPUT_CALLBACK_B = 64;
 
     private void generateOutputCallback(PrintStream out) {
         out.printf("protected void outputCallback(int productionId){%n");
@@ -82,13 +81,13 @@ public class Generator {
     private void generateOutputCallback(PrintStream out, int l, int r) {
         out.printf("protected void outputCallback_%d_%d(int i){%n", l, r);
         int size = r - l;
-        if (size <= BOTTOM_SIZE) {
+        if (size <= OUTPUT_CALLBACK_B) {
             generateOutputCallbackBody(out, l, r);
             out.println("}");
         } else {
             int step = size / OUTPUT_CALLBACK_B;
             if (size <= OUTPUT_CALLBACK_B) {
-                step = BOTTOM_SIZE;
+                step = OUTPUT_CALLBACK_B;
             }
             for (int i = l; i < r; i += step) {
                 int _r = Math.min(i + step, r);
