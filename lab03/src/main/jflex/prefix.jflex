@@ -61,21 +61,21 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   "ifelse"                       { return symbol(PSym.IF_ELSE); }
   "while"                        { return symbol(PSym.LOOP); }
   "var"                          { return symbol(PSym.VAR); }
-  "true" | "false"               { return symbol(PSym.BOOL); }
-  "neg"                          { return symbol(PSym.UArithOp); }
-  [-+*/%]                        { return symbol(PSym.BArithOp); }
-  ">"[=]? | "<"[=]?              { return symbol(PSym.BArithCondOp); }
-  "&&" | "||"                    { return symbol(PSym.BLogOp); }
-  "!"                            { return symbol(PSym.ULogOp); }
-  "==" | "!="                    { return symbol(PSym.EqCondOp); }
-  "?:"                           { return symbol(PSym.TernaryOp); }
-  "="                            { return symbol(PSym.AssignOp); }
+  "true" | "false"               { return symbol(PSym.BOOL, yytext()); }
+  "neg"                          { return symbol(PSym.UArithOp, yytext()); }
+  [-+*/%]                        { return symbol(PSym.BArithOp, yytext()); }
+  ">"[=]? | "<"[=]?              { return symbol(PSym.BArithCondOp, yytext()); }
+  "&&" | "||"                    { return symbol(PSym.BLogOp, yytext()); }
+  "!"                            { return symbol(PSym.ULogOp, yytext()); }
+  "==" | "!="                    { return symbol(PSym.EqCondOp, yytext()); }
+  "?:"                           { return symbol(PSym.TernaryOp, yytext()); }
+  "="                            { return symbol(PSym.AssignOp, yytext()); }
 
   ";"                            { return symbol(PSym.SEMICOLON); }
   "@"                            { return symbol(PSym.CTX_SHIFTER); }
 
   [_A-Za-z][_A-Za-z0-9]*         { return symbol(PSym.ARITH_ID, yytext()); }
-  '#'[_A-Za-z][_A-Za-z0-9]*      { return symbol(PSym.BOOL_ID, yytext()); }
+  "#"[_A-Za-z][_A-Za-z0-9]*      { return symbol(PSym.BOOL_ID, yytext()); }
 
   [\-]?[0-9]+                    { return symbol(PSym.INT, Integer.parseInt(yytext())); }
 
